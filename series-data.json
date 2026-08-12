@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "purpose": "Reference data for date-based U.S. coin series suggestions. The catalog should suggest, not force, a series and allow manual correction.",
+  "US": {
+    "quarters": [
+      {"series":"Barber Quarter","from":1892,"to":1916},
+      {"series":"Standing Liberty Quarter","from":1916,"to":1930},
+      {"series":"Washington Quarter","from":1932,"to":1998},
+      {"series":"State Quarters","from":1999,"to":2008},
+      {"series":"District of Columbia & U.S. Territories Quarter","from":2009,"to":2009},
+      {"series":"America the Beautiful Quarters","from":2010,"to":2021},
+      {"series":"American Women Quarters","from":2022,"to":2025}
+    ],
+    "dimes": [
+      {"series":"Barber Dime","from":1892,"to":1916},
+      {"series":"Mercury Dime","from":1916,"to":1945},
+      {"series":"Roosevelt Dime","from":1946,"to":2100}
+    ],
+    "half-dollars": [
+      {"series":"Barber Half Dollar","from":1892,"to":1915},
+      {"series":"Walking Liberty Half Dollar","from":1916,"to":1947},
+      {"series":"Franklin Half Dollar","from":1948,"to":1963},
+      {"series":"Kennedy Half Dollar","from":1964,"to":2100}
+    ],
+    "nickels": [
+      {"series":"Liberty Head (V) Nickel","from":1883,"to":1913},
+      {"series":"Buffalo Nickel","from":1913,"to":1938},
+      {"series":"Jefferson Nickel","from":1938,"to":2100}
+    ],
+    "cents": [
+      {"series":"Indian Head Cent","from":1859,"to":1909},
+      {"series":"Lincoln Cent","from":1909,"to":2100}
+    ],
+    "dollars": [
+      {"series":"Morgan Dollar","from":1878,"to":1921},
+      {"series":"Peace Dollar","from":1921,"to":1935},
+      {"series":"Eisenhower Dollar","from":1971,"to":1978},
+      {"series":"Susan B. Anthony Dollar","from":1979,"to":1981},
+      {"series":"Susan B. Anthony Dollar","from":1999,"to":1999},
+      {"series":"Sacagawea / Native American Dollar","from":2000,"to":2100}
+    ]
+  }
+}
