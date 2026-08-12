@@ -12,7 +12,11 @@ Before integrating new features into `index.html`, verify:
 - New fields are optional so older records continue to work.
 - Research assistance does not navigate away from the current record.
 - Camera identification requires confirmation before changing a record.
+- VAM assistance remains optional and reference-based rather than pretending to guarantee identification.
 - No customer/account/privacy functionality is introduced until the data separation model is ready.
 
 ## Release rule
 Do not publish a new live build until the above checks have been reviewed against the actual catalog.
+
+## Next integration target
+Integrate the first user-visible Settings controls and optional physical-detail fields (composition and weight) only after a migration-safe backup path is in place.
