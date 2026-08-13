@@ -4,6 +4,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f3f4f6",
   "theme_color": "#111827",
   "description": "Phone-friendly personal catalog for the Lewis private collections.",
