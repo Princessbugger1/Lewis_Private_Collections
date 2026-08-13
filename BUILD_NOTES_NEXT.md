@@ -9,4 +9,10 @@
 5. Preserve the three-state applicable checks: Unknown → Yes → No → Unknown.
 6. Continue testing changes in small commits before attempting larger application-file replacements.
 
+## Small-step progress
+
+- GitHub write access has been confirmed by successful commits.
+- The build notes are stored separately so the live catalog remains protected while incremental changes are tested.
+- Next live-code change should be isolated to one UI behavior at a time.
+
 These notes are intentionally kept separate from the live catalog code while the GitHub connection is being stabilized.
