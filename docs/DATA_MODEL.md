@@ -1,47 +1,75 @@
-# Lewis Private Collections — Data Model
+# Lewis Private Collections — Master Data Model
 
-The catalog should treat these as optional, additive fields so records can grow without breaking older entries.
+The master record is the source of truth. Screens, simple versions, reports, exports, and future features should be views of the same underlying record rather than separate copies.
 
-## Identification
+## Shared identification
+- stable record ID
 - category
-- country
-- type
+- country / issuer
+- type / description
 - denomination
-- year
-- mint
+- date / year
+- mint / issuing authority
 - series
-- grade
-- variety
+- grade / condition
+- variety / error
+- purchase price
+- estimated value
+- collection / set
+- storage location
+- notes / provenance
 
 ## Physical details
-- composition: optional text (example: 90% silver / 10% copper)
-- standardWeight: optional numeric grams
-- actualWeight: optional numeric grams
-- weightUnit: grams by default
-- metalTest: optional result/details
+- composition
+- standard weight
+- actual weight
+- weight unit
+- metal test / testing notes
 
-## Images and provenance
-- photos: optional list of image references
-- photoComplete: checklist state
-- notes
+## Coin media
+- owner obverse photograph
+- owner reverse photograph
+- optional owner edge photograph
+- automatically generated thumbnails from the owner's photographs
+- optional external reference image with source/credit kept separate
+
+## Paper Money media
+- owner face/front photograph
+- owner reverse/back photograph
+- automatically generated thumbnails from the owner's photographs
+- optional external reference image with source/credit kept separate
+
+## Paper Money fields
+- date
+- denomination
+- series
+- serial number
+- star note status
+- Federal Reserve / issuing district
+- Secretary of the Treasury
+- Treasurer of the United States
+- signature combination
+- signature verification status
+- special/autograph signature
+- signature notes/provenance
+- printing information
+- errors / varieties
+- rarity / research information
 
 ## Certification
-- certification.service
-- certification.number
-- certification.grade
-- certification.url
+- certification service
+- certification number
+- certification grade
+- official verification/reference link
 
-## Collection and financial information
-- collection
-- location
-- purchase
-- value
+## Three-state applicable checks
+Each applicable yes/no field uses:
+❓ Unknown / Not Checked → ✅ Yes → ❌ No → ❓ Unknown / Not Checked
 
-## Checklist
-Checklist values use numeric states:
-- 0 = Unknown / Not Checked
-- 1 = Yes
-- 2 = No
-- 3 = N/A
+This deliberately distinguishes "not checked yet" from a confirmed No. Do not delete an underlying field just because a simple view hides it.
 
-This model is intentionally additive. Older records without the newer fields remain valid.
+## Reference-image rule
+A reference image is never presented as the owner's item. Owner photographs and reference photographs use separate data fields and separate labels. Owner thumbnails are derived from the owner's own full photo.
+
+## Future-proofing
+The master record remains richer than any basic catalog view. Future versions can hide fields, reorganize screens, or add research/selling tools without creating duplicate collection records.
