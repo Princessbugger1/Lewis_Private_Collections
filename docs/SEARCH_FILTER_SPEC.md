@@ -22,8 +22,10 @@ Provide easy selectable mint options rather than requiring users to type a mint 
 - San Francisco (S)
 - West Point (W)
 - New Orleans (O)
+- Charlotte (C)
+- Carson City (CC)
 
-Mint filtering applies to all applicable coin types, not only modern quarters.
+Mint filtering applies to all applicable coin types, not only modern quarters. Historical mints such as Charlotte and Carson City must remain available even though they are no longer operating.
 
 ## Filters
 Allow optional filters for category, date/year, denomination, mint, country, grade, certification, and other relevant fields.
