@@ -3,13 +3,13 @@
 ## Categories
 Use simple, direct category names in the main collection navigation:
 - Coins
-- Currency
+- Paper Money
 - Commemorative Coins
 - Medals
 - Tokens
 - Other Collectibles
 
 ## UX
-**Currency** replaces **Paper Money** as the category label for notes and other currency records. There is no separate top-level "Currency" heading above these categories.
+**Paper Money** is the category label for notes and paper currency records. The word **Currency** is not used as a category or top-level heading.
 
 The main navigation should show the categories directly. Search can operate across the entire collection or within a selected category.
