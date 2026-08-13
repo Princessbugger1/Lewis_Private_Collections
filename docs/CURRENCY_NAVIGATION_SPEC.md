@@ -1,15 +1,15 @@
-# Currency Navigation Specification
-
-## Main section
-Use **Currency** as the top-level collection heading.
+# Collection Navigation Specification
 
 ## Categories
+Use simple, direct category names in the main collection navigation:
 - Coins
-- Paper Money
+- Currency
 - Commemorative Coins
 - Medals
 - Tokens
 - Other Collectibles
 
 ## UX
-The word Currency is used in the interface instead of the longer "Currency & Collectibles" label. Categories remain visible and easy to understand. Search can operate across all Currency records or within a selected category.
+**Currency** replaces **Paper Money** as the category label for notes and other currency records. There is no separate top-level "Currency" heading above these categories.
+
+The main navigation should show the categories directly. Search can operate across the entire collection or within a selected category.
