@@ -1,7 +1,7 @@
 # Settings and Dangerous Actions
 
 ## Goal
-Keep ordinary catalog use simple while making destructive or collection-wide actions unmistakably different.
+Keep ordinary catalog use simple while making important collection-wide actions clear.
 
 ## Separate actions
 The application must distinguish clearly between:
@@ -11,8 +11,15 @@ The application must distinguish clearly between:
 
 These actions must never share an ambiguous button labeled simply "Reset."
 
+## Restore warning
+Immediately before restoring, show a short, clear message:
+
+**Restore this backup? Your current collection will be replaced with the saved version.**
+
+Then provide clear **Cancel** and **Restore** choices.
+
 ## Restore safeguards
-Before restoring a backup, show the backup date/version and explain that current data may be replaced or changed. Where practical, create a safety backup of the current state first.
+Show the backup date/version before confirmation. Where practical, create a safety backup of the current state first.
 
 ## Delete safeguards
 Collection deletion should require a deliberate confirmation and should not be available through an accidental single tap. The interface should clearly explain the scope of deletion.
