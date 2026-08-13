@@ -1,0 +1,66 @@
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const KEY='lewis-private-collections-v8';
+const SETTINGS_KEY='lewis-settings';
+let settings={};try{settings=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')}catch(e){}
+settings.details=settings.details!==false;
+settings.photos=true;
+function persistSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function insertUI(){
+ const form=$('formTitle')?.closest('.card'); if(!form||$('enhancedDetails'))return;
+ const grid=form.querySelector('.grid');
+ const detail=document.createElement('div');detail.id='enhancedDetails';detail.className='card';detail.style.cssText='margin:12px 0 0;padding:10px;background:#f9fafb';
+ detail.innerHTML='<b style="font-size:13px">Measurements & Composition Testing</b><div class="grid" style="margin-top:8px"><label>Weight (g)<input id="weight" inputmode="decimal" placeholder="31.10"></label><label>Expected Weight (g)<input id="expectedWeight" inputmode="decimal" placeholder="31.10"></label><label>Diameter (mm)<input id="diameter" inputmode="decimal" placeholder="38.1"></label><label>Thickness (mm)<input id="thickness" inputmode="decimal" placeholder="2.4"></label><label>Composition Tested<button type="button" id="compositionTested" class="state" style="width:100%">❓ Unknown / Not Checked</button></label><label>Test Method / Device (optional)<input id="testMethodDevice" placeholder="Sigma, XRF, magnet, etc."></label><label class="wide">Test Result / Notes (optional)<textarea id="testResultNotes" placeholder="Record what the test showed."></textarea></label></div>';
+ const anchor=form.querySelector('#coaSection')||form.querySelector('#photosSection')||grid;
+ anchor.parentNode.insertBefore(detail,anchor);
+ const photos=$('photosSection');
+ if(photos){
+  const wrap=photos.querySelector('.photos');
+  if(wrap){
+   for(let i=4;i<=8;i++){
+    const box=document.createElement('div');box.className='photoBox';box.innerHTML=`<label>Additional photo ${i-3}<input id="photo${i}" type="file" accept="image/*"></label><img id="preview${i}" class="thumb" hidden><input id="photoLabel${i}" placeholder="Optional label (mint mark, close-up…)"><div class="small">Optional.</div>`;wrap.appendChild(box);
+   }
+  }
+ }
+ const oldCoa=$('coaSection'), oldCert=$('certSection');
+ if(oldCoa){oldCoa.style.display='none'}
+ if(oldCert){oldCert.style.display='none'}
+ const verify=document.createElement('div');verify.id='enhancedVerification';verify.className='card';verify.style.cssText='margin:12px 0 0;padding:10px;background:#f9fafb';
+ verify.innerHTML='<b style="font-size:13px">COA & Verification</b><div class="grid" style="margin-top:8px"><label>COA status<button type="button" id="enhCoaState" class="state" style="width:100%">❓ Unknown / Not Checked</button></label><label>Verification / Certification #<input id="verificationCertification" placeholder="PCGS 12345678"></label><div class="wide small" style="margin-top:2px">Enter the service and number together. Example: PCGS 12345678 or ANACS 12345678.</div><div class="actions wide"><button type="button" class="secondary" id="verifyBtn">🔎 Verify / Lookup</button><span id="verifyStatus" class="small"></span></div></div>';
+ const p=$('photosSection')||detail; p.parentNode.insertBefore(verify,p);
+ setupState('compositionTested');setupState('enhCoaState');
+}
+function setupState(id){const b=$(id);if(!b)return;b.dataset.v='0';b.onclick=()=>{const v=(+(b.dataset.v||0)+1)%3;b.dataset.v=String(v);b.textContent=v===1?'✅ Yes':v===2?'❌ No':'❓ Unknown / Not Checked'}}
+function applyVisibility(){const d=$('enhancedDetails');if(d)d.classList.toggle('hidden-section',!settings.details);const v=$('enhancedVerification');if(v)v.classList.toggle('hidden-section',!settings.details)}
+function addSettings(){const root=$('settings');if(!root||root.querySelector('[data-setting="details"]'))return;const row=document.createElement('div');row.className='settings-row';row.innerHTML='<span>Measurements & Composition Testing</span><button class="secondary switch" data-setting="details">'+(settings.details?'ON':'OFF')+'</button>';root.appendChild(row);row.querySelector('button').onclick=()=>{settings.details=!settings.details;persistSettings();row.querySelector('button').textContent=settings.details?'ON':'OFF';applyVisibility()}}
+function loadRecord(x){
+ const m=x.measurements||{};['weight','expectedWeight','diameter','thickness','testMethodDevice','testResultNotes'].forEach(k=>{if($(k))$(k).value=m[k]??''});
+ if($('compositionTested')){$('compositionTested').dataset.v=String(m.tested??0);$('compositionTested').textContent=(m.tested??0)===1?'✅ Yes':(m.tested??0)===2?'❌ No':'❓ Unknown / Not Checked'}
+ const c=x.coa||{};if($('enhCoaState')){$('enhCoaState').dataset.v=String(c.status??0);$('enhCoaState').textContent=(c.status??0)===1?'✅ Yes':(c.status??0)===2?'❌ No':'❓ Unknown / Not Checked'}
+ let vc=x.verificationCertification||'';if(!vc){const z=x.certification||{};vc=[z.service,z.number].filter(Boolean).join(' ')}if($('verificationCertification'))$('verificationCertification').value=vc;
+ for(let i=1;i<=8;i++){const p=x.photos?.[i-1];if(p&&$('preview'+i)){$('preview'+i).src=p;$('preview'+i).hidden=false}if($('photoLabel'+i))$('photoLabel'+i).value=x.photoLabels?.[i-1]||''}
+ applyVisibility();
+}
+async function readFile(id){const f=$(id)?.files?.[0];if(!f)return null;return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)})}
+let pendingEdit=-1;
+function captureEdit(e){const b=e.target.closest('[data-edit]');if(b)pendingEdit=+(b.dataset.edit)}
+async function saveEnhancements(){
+ let arr=[];try{arr=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return}
+ if(!Array.isArray(arr)||!arr.length)return;
+ const idx=pendingEdit>=0&&pendingEdit<arr.length?pendingEdit:0;
+ const x=arr[idx]||{};
+ x.measurements={weight:$('weight')?.value.trim()||'',expectedWeight:$('expectedWeight')?.value.trim()||'',diameter:$('diameter')?.value.trim()||'',thickness:$('thickness')?.value.trim()||'',tested:+($('compositionTested')?.dataset.v||0),testMethodDevice:$('testMethodDevice')?.value.trim()||'',testResultNotes:$('testResultNotes')?.value.trim()||''};
+ x.verificationCertification=$('verificationCertification')?.value.trim()||'';
+ x.coa=x.coa||{};x.coa.status=+($('enhCoaState')?.dataset.v||0);
+ x.photos=x.photos||[];x.photoLabels=x.photoLabels||[];
+ for(let i=1;i<=8;i++){const p=await readFile('photo'+i);if(p)x.photos[i-1]=p;const lab=$('photoLabel'+i)?.value.trim();if(lab)x.photoLabels[i-1]=lab}
+ arr[idx]=x;localStorage.setItem(KEY,JSON.stringify(arr));
+}
+function hookSave(){const b=$('saveBtn');if(!b||b.dataset.enhanced)return;b.dataset.enhanced='1';const original=b.onclick;b.onclick=async()=>{await original();setTimeout(saveEnhancements,0)}}
+function hookRecordClicks(){const r=$('records');if(r&&!r.dataset.enhanced){r.dataset.enhanced='1';r.addEventListener('click',captureEdit,true);r.addEventListener('click',e=>{if(e.target.closest('button'))return;const rec=e.target.closest('.record');const b=rec?.querySelector('[data-edit]');if(b)b.click()})}}
+function hookVerify(){const b=$('verifyBtn');if(!b||b.dataset.enhanced)return;b.dataset.enhanced='1';b.onclick=()=>{const v=$('verificationCertification')?.value.trim();const s=$('verifyStatus');if(!v){s.textContent='Enter a verification/certification number first.';return}const m=v.match(/^([A-Za-z][A-Za-z0-9-]*)\s+(.+)$/);if(!m){s.textContent='Service/number not recognized. Check the entry manually.';return}const service=m[1].toUpperCase(),num=m[2].trim();const urls={PCGS:'https://www.pcgs.com/cert/',NGC:'https://www.ngccoin.com/certlookup/'};if(urls[service]){s.textContent='Please verify the number before saving. Opening '+service+' verification…';window.open(urls[service]+encodeURIComponent(num),'_blank','noopener')}else{s.textContent='Verification not available for this service. The information can still be saved.'}}
+function init(){insertUI();addSettings();applyVisibility();hookSave();hookRecordClicks();hookVerify();}
+const mo=new MutationObserver(init);mo.observe(document.body,{childList:true,subtree:true});init();
+})();
