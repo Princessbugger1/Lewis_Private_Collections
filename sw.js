@@ -1,4 +1,4 @@
-const CACHE='lewis-private-collections-v12';
+const CACHE='lewis-private-collections-v13';
 const ASSETS=['./','./index.html','./manifest.json','./catalog-enhancements.js','./catalog-view-fix.js','./raw-coin-research.js','./raw-coin-research-adapter.js','./research-disclaimer.js','./optional-category-tabs.js','./optional-category-tabs.css'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
