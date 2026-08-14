@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Catalog Integration Test</title></head>
+<body>
+<h1>Catalog integration safety test</h1>
+<pre id="result">Running…</pre>
+<script type="module">
+import { catalogIntegration } from './src/catalog-integration.js';
+
+const KEY = 'lewis-private-collections-v8-integration-test';
+const storage = {
+  getItem(key) { return localStorage.getItem(key); },
+  setItem(key, value) { localStorage.setItem(key, value); }
+};
+
+const original = [{ id: 'integration-1', type: 'Test coin', year: '1900', series: 'Test Series' }];
+localStorage.setItem(KEY, JSON.stringify(original));
+
+try {
+  const api = catalogIntegration(storage);
+  const loaded = api.load();
+  if (loaded.length !== 1 || loaded[0].id !== 'integration-1') throw new Error('Load failed');
+  const moved = api.move('integration-1', { collection: 'Test Collection' });
+  if (moved[0].collection !== 'Test Collection') throw new Error('Move failed');
+  const removed = api.removeFromSeries('integration-1');
+  if (removed[0].series !== '') throw new Error('Remove-from-series failed');
+  const deleted = api.delete('integration-1');
+  if (deleted.length !== 0) throw new Error('Delete failed');
+  document.querySelector('#result').textContent = 'PASS — load, move, remove-from-series, and delete all behaved correctly.';
+} catch (error) {
+  document.querySelector('#result').textContent = `FAIL — ${error.message}`;
+} finally {
+  localStorage.removeItem(KEY);
+}
+</script>
+</body>
+</html>
