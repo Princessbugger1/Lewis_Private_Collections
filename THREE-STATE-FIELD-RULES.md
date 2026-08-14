@@ -13,6 +13,7 @@ Applicable yes/no fields use a compact three-state control so an unanswered valu
 - The control should visually communicate all three states without requiring a large card.
 - The current state must be understandable at a glance.
 - The cycle should be consistent across applicable fields.
+- Keyboard and accessibility activation should use the same three-state cycle.
 
 ## Applicable examples
 COA, OGP, original box, Sigma tested, photos complete, variety checked, attribution checked, authenticity checked, and similar yes/no questions.
@@ -22,3 +23,4 @@ COA, OGP, original box, Sigma tested, photos complete, variety checked, attribut
 - Existing records receiving the new field default to Unknown / Not Checked until checked.
 - Import, backup, restore, search, and filtering must preserve all three states.
 - A research suggestion must not silently convert Unknown to No.
+- Confirmed Yes or No must not be overwritten merely because a research source has no value for the field.
