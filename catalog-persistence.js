@@ -1,83 +1,21 @@
-/* Lewis Private Collections - persistence guard
-   Keeps a secondary localStorage mirror so normal refreshes/app updates do not
-   accidentally start the catalog from an empty collection. It never deletes
-   the primary catalog key. */
+/* Lewis Private Collections - startup persistence guard */
 (() => {
-  const PRIMARY = 'lewis-private-collections-v8';
-  const MIRROR = 'lewis-private-collections-persistence-mirror-v1';
-  const LEGACY = ['lewis-private-collections-v7'];
-
-  function readJson(key) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return null;
-      const value = JSON.parse(raw);
-      return Array.isArray(value) ? value : null;
-    } catch (_) { return null; }
-  }
-
-  function writeMirror(raw) {
-    if (!raw) return;
-    try {
-      localStorage.setItem(MIRROR, JSON.stringify({ savedAt: new Date().toISOString(), raw }));
-    } catch (_) {}
-  }
-
-  function recover() {
-    try {
-      const primary = readJson(PRIMARY);
-      if (primary && primary.length) return primary;
-
-      let recovered = null;
-      const mirrorRaw = localStorage.getItem(MIRROR);
-      if (mirrorRaw) {
-        try {
-          const parsed = JSON.parse(mirrorRaw);
-          recovered = JSON.parse(parsed.raw);
-        } catch (_) {}
-      }
-      if (!Array.isArray(recovered) || recovered.length === 0) {
-        for (const key of LEGACY) {
-          const legacy = readJson(key);
-          if (legacy && legacy.length) { recovered = legacy; break; }
-        }
-      }
-      if (Array.isArray(recovered) && recovered.length) {
-        localStorage.setItem(PRIMARY, JSON.stringify(recovered));
-        return recovered;
-      }
-    } catch (_) {}
-    return null;
-  }
-
-  recover();
-
-  // If this helper is injected before the catalog's inline script, the catalog
-  // has not created window.render yet. Refresh the catalog after startup so a
-  // recovered collection is displayed without requiring a search keystroke.
-  function refreshCatalog() {
-    try {
-      if (typeof window.render === 'function') {
-        window.render();
-      } else {
-        window.dispatchEvent(new CustomEvent('lewis-catalog-data-ready'));
-      }
-    } catch (_) {}
-  }
-  [0, 50, 250, 1000].forEach(ms => setTimeout(refreshCatalog, ms));
-
-  try {
-    const originalSetItem = Storage.prototype.setItem;
-    Storage.prototype.setItem = function(key, value) {
-      const result = originalSetItem.call(this, key, value);
-      if (this === localStorage && key === PRIMARY) {
-        writeMirror(value);
-        setTimeout(refreshCatalog, 0);
-      }
-      return result;
-    };
-
-    const existing = localStorage.getItem(PRIMARY);
-    if (existing) writeMirror(existing);
-  } catch (_) {}
+  'use strict';
+  const PRIMARY='lewis-private-collections-v8', MIRROR='lewis-private-collections-persistence-mirror-v1', LEGACY=['lewis-private-collections-v7'];
+  const rawArray=key=>{try{const r=localStorage.getItem(key),v=r?JSON.parse(r):null;return Array.isArray(v)?v:null}catch(_){return null}};
+  let recoveredRaw=null;
+  try{
+    const p=localStorage.getItem(PRIMARY), a=p?JSON.parse(p):null;
+    if(Array.isArray(a)&&a.length) recoveredRaw=p;
+    if(!recoveredRaw){try{const m=JSON.parse(localStorage.getItem(MIRROR)||'null');const v=m&&typeof m.raw==='string'?JSON.parse(m.raw):null;if(Array.isArray(v)&&v.length)recoveredRaw=m.raw}catch(_){}
+    }
+    if(!recoveredRaw)for(const k of LEGACY){const v=rawArray(k);if(v&&v.length){recoveredRaw=JSON.stringify(v);break}}
+    if(recoveredRaw&&(!a||!a.length))localStorage.setItem(PRIMARY,recoveredRaw);
+  }catch(_){}
+  try{
+    const get=Storage.prototype.getItem;
+    Storage.prototype.getItem=function(key){const v=get.call(this,key);if(this===localStorage&&key===PRIMARY&&(!v||v==='[]')&&recoveredRaw)return recoveredRaw;return v};
+    const set=Storage.prototype.setItem;
+    Storage.prototype.setItem=function(key,value){const result=set.call(this,key,value);if(this===localStorage&&key===PRIMARY){try{const a=JSON.parse(value);if(Array.isArray(a)&&a.length){recoveredRaw=value;set.call(this,MIRROR,JSON.stringify({savedAt:new Date().toISOString(),raw:value}))}}catch(_){} }return result};
+  }catch(_){}
 })();
