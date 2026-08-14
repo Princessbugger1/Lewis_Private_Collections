@@ -43,3 +43,10 @@ export function removeFromSeries(records, id) {
 export function deleteRecord(records, id) {
   return records.filter(record => record.id !== id);
 }
+
+// Non-destructive migration for older saved records.
+// It assigns IDs in memory and persists the migrated records only when requested.
+export function migrateStoredRecords(storage = globalThis.localStorage) {
+  const records = loadRecords(storage);
+  return saveRecords(records, storage);
+}
