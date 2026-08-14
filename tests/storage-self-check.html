@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Catalog storage self-check</title>
+<script type="module">
+import assert from 'https://cdn.jsdelivr.net/npm/node-assert@2.0.0/+esm';
+import { ensureId, moveRecord, removeFromSeries, deleteRecord } from '../src/storage.js';
+const record = ensureId({ type: 'Test coin', series: 'Test series' });
+assert.ok(record.id);
+assert.equal(moveRecord([record], record.id, { series: 'Moved series' })[0].id, record.id);
+assert.equal(removeFromSeries([record], record.id)[0].id, record.id);
+assert.equal(deleteRecord([record], record.id).length, 0);
+document.body.textContent = 'PASS — storage move/remove/delete checks';
+</script>
