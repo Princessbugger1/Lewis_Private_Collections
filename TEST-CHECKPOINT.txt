@@ -1,0 +1,1 @@
+Safe test checkpoint created from main. This file is intentionally separate from the catalog code and can be removed after testing.
