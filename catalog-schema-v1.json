@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lewis Private Collections Item",
+  "type": "object",
+  "required": ["id", "category"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "minLength": 1 },
+    "classification": { "type": "string" },
+    "country": { "type": "string" },
+    "issuer": { "type": "string" },
+    "denomination": { "type": "string" },
+    "year": { "type": ["string", "integer"] },
+    "mint": { "type": "string" },
+    "type": { "type": "string" },
+    "series": { "type": "string" },
+    "customSeriesId": { "type": ["string", "null"] },
+    "customClassificationId": { "type": ["string", "null"] },
+    "countryCode": { "type": "string" },
+    "flagKey": { "type": "string" },
+    "identification": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["confirmed", "suggested", "needs-review", "unknown"] },
+        "source": { "type": "string" },
+        "suggestion": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "quantity": { "type": "integer", "minimum": 1 },
+    "private": { "type": "boolean" },
+    "photos": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": true
+}
