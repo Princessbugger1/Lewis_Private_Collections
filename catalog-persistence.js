@@ -20,18 +20,16 @@
     if (!raw) return;
     try {
       localStorage.setItem(MIRROR, JSON.stringify({ savedAt: new Date().toISOString(), raw }));
-    } catch (_) {
-      // If storage is full, the main catalog remains the source of truth.
-    }
+    } catch (_) {}
   }
 
-  // If the current key is empty but a prior catalog exists, restore it before
-  // the application is used. Also recover from the previous v7 key if needed.
-  try {
-    const primary = readJson(PRIMARY);
-    if (!primary || primary.length === 0) {
-      const mirrorRaw = localStorage.getItem(MIRROR);
+  function recover() {
+    try {
+      const primary = readJson(PRIMARY);
+      if (primary && primary.length) return primary;
+
       let recovered = null;
+      const mirrorRaw = localStorage.getItem(MIRROR);
       if (mirrorRaw) {
         try {
           const parsed = JSON.parse(mirrorRaw);
@@ -46,17 +44,36 @@
       }
       if (Array.isArray(recovered) && recovered.length) {
         localStorage.setItem(PRIMARY, JSON.stringify(recovered));
+        return recovered;
       }
-    }
-  } catch (_) {}
+    } catch (_) {}
+    return null;
+  }
 
-  // Mirror future catalog saves. This is intentionally installed after the
-  // main app has loaded, but before the user can interact with it.
+  recover();
+
+  // If this helper is injected before the catalog's inline script, the catalog
+  // has not created window.render yet. Refresh the catalog after startup so a
+  // recovered collection is displayed without requiring a search keystroke.
+  function refreshCatalog() {
+    try {
+      if (typeof window.render === 'function') {
+        window.render();
+      } else {
+        window.dispatchEvent(new CustomEvent('lewis-catalog-data-ready'));
+      }
+    } catch (_) {}
+  }
+  [0, 50, 250, 1000].forEach(ms => setTimeout(refreshCatalog, ms));
+
   try {
     const originalSetItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function(key, value) {
       const result = originalSetItem.call(this, key, value);
-      if (this === localStorage && key === PRIMARY) writeMirror(value);
+      if (this === localStorage && key === PRIMARY) {
+        writeMirror(value);
+        setTimeout(refreshCatalog, 0);
+      }
       return result;
     };
 
