@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lewis Catalog — Migration Harness</title>
+<style>
+  body{font-family:system-ui,sans-serif;padding:20px;max-width:700px;margin:auto}
+  button{padding:12px 16px;margin:6px 0}
+  pre{white-space:pre-wrap;background:#f3f3f3;padding:12px;border-radius:8px}
+</style>
+<h1>Safe Migration Test</h1>
+<p>This test page uses a separate test storage key. It cannot modify the live catalog data.</p>
+<button id="run">Run migration test</button>
+<pre id="result">Not run yet.</pre>
+<script type="module">
+import { ensureId } from '../src/storage.js';
+
+const TEST_KEY = 'lewis-private-collections-migration-test-only';
+const result = document.querySelector('#result');
+
+document.querySelector('#run').addEventListener('click', () => {
+  const legacy = { type:'Test coin', year:'1900', series:'Test Series', notes:'Do not keep' };
+  localStorage.setItem(TEST_KEY, JSON.stringify([legacy]));
+  const before = JSON.parse(localStorage.getItem(TEST_KEY));
+  const after = before.map(ensureId);
+  localStorage.setItem(TEST_KEY, JSON.stringify(after));
+  const saved = JSON.parse(localStorage.getItem(TEST_KEY));
+  const pass = saved.length === 1 && saved[0].id && saved[0].type === legacy.type && saved[0].year === legacy.year && saved[0].series === legacy.series;
+  result.textContent = pass
+    ? 'PASS — legacy fields survived and an ID was added.\nThe live catalog storage key was not used.'
+    : 'FAIL — migration result was not as expected.';
+  localStorage.removeItem(TEST_KEY);
+});
+</script>
