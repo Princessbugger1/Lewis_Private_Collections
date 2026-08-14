@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "purpose": "Editable classification suggestions for all collection items.",
+  "allowCustom": true,
+  "suggestions": [
+    "Coins",
+    "Paper Money",
+    "Tokens",
+    "Medals",
+    "Commemorative",
+    "Counterfeit",
+    "Bullion",
+    "Ancient",
+    "Exonumia",
+    "Sets",
+    "Error / Variety",
+    "World Coin",
+    "U.S. Coin",
+    "Other"
+  ],
+  "rules": {
+    "editableAfterSave": true,
+    "customValuesAllowed": true,
+    "changingClassificationPreservesRecord": true,
+    "hidingClassificationDeletesNothing": true
+  }
+}
