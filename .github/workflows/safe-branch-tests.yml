@@ -1,0 +1,20 @@
+name: Safe branch tests
+
+on:
+  push:
+    branches:
+      - safe-test-checkpoint
+  pull_request:
+    branches:
+      - safe-test-checkpoint
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify core catalog source
+        run: node catalog-smoke-test.js
+      - name: Verify storage and adapter modules
+        run: node --experimental-default-type=module tests/storage.test.js && node --experimental-default-type=module tests/catalog-adapter.test.js && node --experimental-default-type=module tests/migration-contract.test.js && node --experimental-default-type=module tests/catalog-shim.test.js
