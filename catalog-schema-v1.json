@@ -9,15 +9,16 @@
     "classification": { "type": "string" },
     "country": { "type": "string" },
     "issuer": { "type": "string" },
+    "countryCode": { "type": "string" },
+    "flagKey": { "type": "string" },
     "denomination": { "type": "string" },
     "year": { "type": ["string", "integer"] },
+    "dateRange": { "type": "string" },
     "mint": { "type": "string" },
     "type": { "type": "string" },
     "series": { "type": "string" },
     "customSeriesId": { "type": ["string", "null"] },
     "customClassificationId": { "type": ["string", "null"] },
-    "countryCode": { "type": "string" },
-    "flagKey": { "type": "string" },
     "identification": {
       "type": "object",
       "properties": {
@@ -27,10 +28,37 @@
       },
       "additionalProperties": true
     },
+    "ancient": {
+      "type": "object",
+      "properties": {
+        "ruler": { "type": "string" },
+        "dynasty": { "type": "string" },
+        "culture": { "type": "string" },
+        "region": { "type": "string" },
+        "period": { "type": "string" },
+        "approximateDate": { "type": "string" },
+        "attributionNotes": { "type": "string" },
+        "provenance": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "paperMoney": {
+      "type": "object",
+      "properties": {
+        "serialNumber": { "type": "string" },
+        "starNote": { "type": "string" },
+        "signatures": { "type": "string" },
+        "printingInformation": { "type": "string" },
+        "errorsVarieties": { "type": "string" },
+        "issuer": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
     "quantity": { "type": "integer", "minimum": 1 },
     "private": { "type": "boolean" },
     "photos": { "type": "array", "items": { "type": "string" } },
-    "notes": { "type": "string" }
+    "notes": { "type": "string" },
+    "checks": { "type": "object", "additionalProperties": { "enum": ["unknown", "yes", "no"] } }
   },
   "additionalProperties": true
 }
