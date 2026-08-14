@@ -1,0 +1,26 @@
+name: Catalog integration tests
+
+on:
+  push:
+    branches:
+      - catalog-integration-test
+  pull_request:
+    branches:
+      - catalog-integration-test
+
+jobs:
+  node-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Run storage and adapter checks
+        run: |
+          node --experimental-default-type=module tests/storage.test.js
+          node --experimental-default-type=module tests/catalog-adapter.test.js
+          node --experimental-default-type=module tests/migration-contract.test.js
+          node --experimental-default-type=module tests/catalog-shim.test.js
+          node --experimental-default-type=module tests/legacy-id-migration.test.js
+          node --experimental-default-type=module tests/stored-migration.test.js
+          node --experimental-default-type=module tests/legacy-storage-bridge.test.js
+          node --experimental-default-type=module tests/catalog-integration.test.js
