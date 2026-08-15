@@ -1,0 +1,47 @@
+name: Apply clean catalog fixes
+on:
+  push:
+    branches: [clean-safe-fix-v2]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply only verified fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='SAFE CLEAN FIX V2'
+          if marker in s:
+              print('Already patched')
+              raise SystemExit(0)
+          old='${x.notes?`<div class="meta">Notes: ${esc(x.notes)}</div>`:''}<div class="checks">'
+          new='${x.notes?`<div class="meta">Notes: ${esc(x.notes)}</div>`:''}${settings.photos&&x.photos&&x.photos.some(Boolean)?`<div class="photos" style="margin-top:8px">${x.photos.map((p,n)=>p?`<div class="photoBox"><img class="thumb" src="${p}" alt="Photo ${n+1}"></div>`:'').join('')}</div>`:''}<div class="checks">'
+          if old not in s:
+              raise SystemExit('Photo display insertion point not found; no changes made.')
+          s=s.replace(old,new,1)
+          old='${checks.map(k=>{let v=state(x,k);return`<button class="state ${v===1?'yes':v===2?'no':''}" data-check="${i}" data-key="${esc(k)}">${esc(k)}: ${cycle(v)}</button>`}).join('')}'
+          new='${checks.map(k=>{let v=state(x,k);let keyClass=(!settings.coa&&k==='COA')||(!settings.ogp&&k==='OGP')||(!settings.originalBox&&k==='Original box')||(!settings.sigma&&k==='Sigma tested')||(!settings.photosComplete&&k==='Photos complete')||(!settings.variety&&k==='Variety checked')?' hidden-section':'';return`<button class="state ${v===1?'yes':v===2?'no':''}${keyClass}" data-check="${i}" data-key="${esc(k)}">${esc(k)}: ${cycle(v)}</button>`}).join('')}'
+          if old not in s:
+              raise SystemExit('Settings check rendering point not found; no changes made.')
+          s=s.replace(old,new,1)
+          old="$('coaState').dataset.v=c.status||0;$('coaState').textContent=cycle(c.status||0);editing=i;$('formTitle').textContent='Edit item';"
+          new="$('coaState').dataset.v=c.status||0;$('coaState').textContent=cycle(c.status||0);['preview1','preview2','preview3'].forEach((id,n)=>{let p=(x.photos||[])[n];$(id).src=p||'';$(id).hidden=!p});editing=i;$('formTitle').textContent='Edit item';"
+          if old not in s:
+              raise SystemExit('Photo restore insertion point not found; no changes made.')
+          s=s.replace(old,new,1)
+          s=s.replace('</script></body></html>','/* SAFE CLEAN FIX V2 */</script></body></html>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Apply verified COA and photo fixes'
+          git push
