@@ -3,6 +3,7 @@
   let internalDepth=0;
   let lastView='';
   let settingsOpen=false;
+  let closingSettingsFromBack=false;
 
   const appState=()=>({
     view:document.getElementById('formTitle')?.textContent||'catalog',
@@ -47,6 +48,11 @@
       if(!control || !/settings/i.test((control.textContent||'').trim())) return;
       setTimeout(()=>{
         const nowOpen=isSettingsOpen();
+        if(closingSettingsFromBack){
+          settingsOpen=nowOpen;
+          closingSettingsFromBack=false;
+          return;
+        }
         if(nowOpen && !settingsOpen){
           if(history.state?.catalogBase!==true){
             history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
@@ -86,11 +92,11 @@
     }
     window.addEventListener('popstate',e=>{
       if(e.state&&e.state.catalogBase===true){
-        if(e.state.catalogView==='settings'){
-          internalDepth=0;
-          settingsOpen=true;
+        if(settingsOpen && e.state.catalogView==='catalog'){
+          closingSettingsFromBack=true;
           const control=findSettingsControl();
           if(control && isSettingsOpen()) control.click();
+          settingsOpen=false;
           return;
         }
         internalDepth=0;
