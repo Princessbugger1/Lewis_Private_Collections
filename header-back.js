@@ -15,6 +15,15 @@
     return false;
   }
 
+  function removeOldCoaSwitch(){
+    const box=document.getElementById('settings');
+    if(!box)return;
+    [...box.querySelectorAll('.settings-row')].forEach(row=>{
+      const label=row.querySelector('span');
+      if(label && /^COA$/i.test((label.textContent||'').trim())) row.remove();
+    });
+  }
+
   function install(){
     const header=document.querySelector('header');
     if(!header||document.getElementById('catalogBackButton'))return;
@@ -56,6 +65,12 @@
       }
     },true);
     settingsControl=findSettingsControl()||settingsControl;
+
+    const box=document.getElementById('settings');
+    if(box){
+      removeOldCoaSwitch();
+      new MutationObserver(removeOldCoaSwitch).observe(box,{childList:true,subtree:true});
+    }
   }
 
   function initHistory(){
@@ -96,7 +111,7 @@
     });
   }
 
-  function start(){install();initHistory();watchSettings();setTimeout(install,100);setTimeout(install,500)}
+  function start(){install();initHistory();watchSettings();setTimeout(install,100);setTimeout(install,500);setTimeout(removeOldCoaSwitch,100);setTimeout(removeOldCoaSwitch,500)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('load',install,{once:true});
 })();
