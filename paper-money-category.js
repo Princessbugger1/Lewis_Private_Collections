@@ -16,7 +16,9 @@ function movePaperMoneySection(){
   const form=section.closest('main')?.querySelector('section.card');
   const grid=form?.querySelector('.grid');
   if(!grid)return;
-  if(section.parentElement!==grid)grid.appendChild(section);
+  if(section.parentElement!==grid){
+    grid.insertBefore(section,grid.children[1]||null);
+  }
   section.classList.add('wide');
   section.style.margin='12px 0 0';
   section.style.padding='10px';
