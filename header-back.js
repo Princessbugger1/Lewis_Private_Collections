@@ -2,19 +2,8 @@
   'use strict';
   let internalDepth=0;
   let lastView='';
-  let settingsOpen=false;
+  let settingsControl=null;
   let closingSettingsFromBack=false;
-
-  const appState=()=>({
-    view:document.getElementById('formTitle')?.textContent||'catalog',
-    settings:isSettingsOpen()
-  });
-
-  function isSettingsOpen(){
-    const p=document.querySelector('#settingsPanel,.settings-panel,[data-settings-panel]');
-    if(p) return getComputedStyle(p).display!=='none' && getComputedStyle(p).visibility!=='hidden' && !p.hidden;
-    return false;
-  }
 
   function findSettingsControl(){
     return [...document.querySelectorAll('button,a,[role="button"]')].find(el=>/settings/i.test((el.textContent||'').trim()));
@@ -45,40 +34,33 @@
   function watchSettings(){
     document.addEventListener('click',event=>{
       const control=event.target.closest?.('button,a,[role="button"]');
-      if(!control || !/settings/i.test((control.textContent||'').trim())) return;
-      setTimeout(()=>{
-        const nowOpen=isSettingsOpen();
-        if(closingSettingsFromBack){
-          settingsOpen=nowOpen;
-          closingSettingsFromBack=false;
-          return;
-        }
-        if(nowOpen && !settingsOpen){
-          if(history.state?.catalogBase!==true){
-            history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
-          }
-          if(history.state?.catalogView!=='settings'){
-            history.pushState({catalogBase:true,catalogView:'settings'},'',location.href);
-          }
-        } else if(!nowOpen && settingsOpen){
-          if(history.state?.catalogView==='settings') history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
-        }
-        settingsOpen=nowOpen;
-      },0);
+      if(!control || control.id==='catalogBackButton' || !/settings/i.test((control.textContent||'').trim())) return;
+      settingsControl=control;
+      if(closingSettingsFromBack){
+        closingSettingsFromBack=false;
+        return;
+      }
+      if(history.state?.catalogBase!==true){
+        history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
+      }
+      if(history.state?.catalogView==='catalog'){
+        history.pushState({catalogBase:true,catalogView:'settings'},'',location.href);
+      } else if(history.state?.catalogView==='settings'){
+        history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
+      }
     },true);
-    settingsOpen=isSettingsOpen();
+    settingsControl=findSettingsControl()||settingsControl;
   }
 
   function initHistory(){
     if(!history.state||history.state.catalogBase!==true){
       history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
     }
-    lastView=appState().view;
-    settingsOpen=appState().settings;
+    lastView=document.getElementById('formTitle')?.textContent||'catalog';
     const target=document.getElementById('formTitle');
     if(target){
       new MutationObserver(()=>{
-        const view=appState().view;
+        const view=document.getElementById('formTitle')?.textContent||'catalog';
         if(view!==lastView){
           if(view==='Edit an item' || view==='Edit item'){
             history.pushState({catalogBase:true,catalogView:'item'},'',location.href);
@@ -91,19 +73,18 @@
       }).observe(target,{childList:true,subtree:true,characterData:true});
     }
     window.addEventListener('popstate',e=>{
-      if(e.state&&e.state.catalogBase===true){
-        if(settingsOpen && e.state.catalogView==='catalog'){
-          closingSettingsFromBack=true;
-          const control=findSettingsControl();
-          if(control && isSettingsOpen()) control.click();
-          settingsOpen=false;
-          return;
-        }
+      if(!e.state||e.state.catalogBase!==true)return;
+      if(e.state.catalogView==='catalog' && history.state?.catalogView!=='settings' && (settingsControl || findSettingsControl())){
+        const control=settingsControl||findSettingsControl();
+        closingSettingsFromBack=true;
+        control.click();
         internalDepth=0;
-        settingsOpen=false;
-        if(typeof window.reset==='function')window.reset();
-        lastView='Add an item';
+        return;
       }
+      if(e.state.catalogView==='settings')return;
+      internalDepth=0;
+      if(typeof window.reset==='function')window.reset();
+      lastView='Add an item';
     });
   }
 
