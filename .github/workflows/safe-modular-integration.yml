@@ -1,0 +1,61 @@
+name: Safe modular integration
+
+on:
+  push:
+    branches: [safe-modular-fixes]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out safe branch
+        uses: actions/checkout@v4
+
+      - name: Apply proven COA and photo fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = 'SAFE MODULAR INTEGRATION v1'
+          if marker in s:
+              print('Patch already applied; nothing to do.')
+              raise SystemExit(0)
+
+          old = "document.querySelectorAll('[data-key=\"OGP\"]').forEach(b=>b.classList.toggle('hidden-section',!settings.ogp));"
+          new = old + "document.querySelectorAll('[data-key=\"COA\"]').forEach(b=>b.classList.toggle('hidden-section',!settings.coa));"
+          if old not in s:
+              raise SystemExit('Expected settings hook not found; refusing to modify index.html.')
+          s = s.replace(old, new, 1)
+
+          old = "${x.notes?`<div class=\"meta\">Notes: ${esc(x.notes)}</div>`:''}<div class=\"checks\">"
+          new = "${x.notes?`<div class=\"meta\">Notes: ${esc(x.notes)}</div>`:''}${settings.photos&&x.photos&&x.photos.some(Boolean)?`<div class=\"photos\" style=\"margin-top:8px\">${x.photos.map((p,n)=>p?`<div class=\"photoBox\"><img class=\"thumb\" src=\"${p}\" alt=\"Photo ${n+1}\"></div>`:'').join('')}</div>`:''}<div class=\"checks\">"
+          if old not in s:
+              raise SystemExit('Expected record-render hook not found; refusing to modify index.html.')
+          s = s.replace(old, new, 1)
+
+          old = "$('coaState').textContent=cycle(c.status||0);editing=i;$('formTitle').textContent='Edit item';"
+          new = "$('coaState').textContent=cycle(c.status||0);['preview1','preview2','preview3'].forEach((id,n)=>{let p=(x.photos||[])[n];$(id).src=p||'';$(id).hidden=!p});editing=i;$('formTitle').textContent='Edit item';"
+          if old not in s:
+              raise SystemExit('Expected edit-photo hook not found; refusing to modify index.html.')
+          s = s.replace(old, new, 1)
+
+          s = s.replace('</script></body></html>', '/* SAFE MODULAR INTEGRATION v1 */</script></body></html>', 1)
+          p.write_text(s, encoding='utf-8')
+          print('Applied safe modular integration patch.')
+          PY
+
+      - name: Commit patched safe branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Apply proven COA and photo fixes on safe branch"
+            git push
+          fi
