@@ -9,6 +9,12 @@
     return [...document.querySelectorAll('button,a,[role="button"]')].find(el=>/settings/i.test((el.textContent||'').trim()));
   }
 
+  function settingsIsOpen(){
+    const p=document.querySelector('#settingsPanel,.settings-panel,[data-settings-panel]');
+    if(p) return getComputedStyle(p).display!=='none' && getComputedStyle(p).visibility!=='hidden' && !p.hidden;
+    return false;
+  }
+
   function install(){
     const header=document.querySelector('header');
     if(!header||document.getElementById('catalogBackButton'))return;
@@ -43,8 +49,8 @@
       if(history.state?.catalogBase!==true){
         history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
       }
-      if(history.state?.catalogView==='catalog'){
-        history.pushState({catalogBase:true,catalogView:'settings'},'',location.href);
+      if(settingsIsOpen()){
+        if(history.state?.catalogView==='catalog') history.pushState({catalogBase:true,catalogView:'settings'},'',location.href);
       } else if(history.state?.catalogView==='settings'){
         history.replaceState({catalogBase:true,catalogView:'catalog'},'',location.href);
       }
@@ -74,10 +80,12 @@
     }
     window.addEventListener('popstate',e=>{
       if(!e.state||e.state.catalogBase!==true)return;
-      if(e.state.catalogView==='catalog' && history.state?.catalogView!=='settings' && (settingsControl || findSettingsControl())){
+      if(e.state.catalogView==='catalog' && settingsIsOpen()){
         const control=settingsControl||findSettingsControl();
-        closingSettingsFromBack=true;
-        control.click();
+        if(control){
+          closingSettingsFromBack=true;
+          control.click();
+        }
         internalDepth=0;
         return;
       }
