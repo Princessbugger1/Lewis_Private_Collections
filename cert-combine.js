@@ -2,102 +2,19 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const services={PCGS:'https://www.pcgs.com/cert',NGC:'https://www.ngccoin.com/CERTLOOKUP/',ANACS:'https://anacs.com/verify/',ICG:'https://www.icgcoin.com/'};
-function syncLegacy(){
-  const v=+( $('certCombinedState')?.dataset.v||0);
-  const service=$('certCombinedService')?.value||'';
-  const num=$('certCombinedNumber')?.value.trim()||'';
-  const grade=$('certCombinedGrade')?.value.trim()||'';
-  const url=$('certCombinedUrl')?.value.trim()||'';
-  const issuer=$('certCombinedIssuer')?.value.trim()||'';
-  const coaNum=$('certCombinedCoaNumber')?.value.trim()||'';
-  const coaNotes=$('certCombinedCoaNotes')?.value.trim()||'';
-  if($('certService'))$('certService').value=service;
-  if($('certNumber'))$('certNumber').value=num;
-  if($('certGrade'))$('certGrade').value=grade;
-  if($('certUrl'))$('certUrl').value=url;
-  if($('coaIssuer'))$('coaIssuer').value=issuer;
-  if($('coaNumber'))$('coaNumber').value=coaNum;
-  if($('coaNotes'))$('coaNotes').value=coaNotes;
-  if($('coaState')){$('coaState').dataset.v=String(v);$('coaState').textContent=v===1?'✅':v===2?'❌':'❓';}
-}
-function updateDetails(){const show=$('certCombinedState')?.dataset.v==='1';const details=$('certCombinedDetails');if(details)details.hidden=!show;}
-function populateVerify(){const service=$('certCombinedService')?.value||'';const manual=$('certCombinedUrl')?.value.trim()||'';const url=manual||services[service]||'';const a=$('certCombinedVerify');if(!a)return;if(url){a.href=url;a.hidden=false;a.textContent=service?'Open '+service+' verification':'Open verification link';}else{a.hidden=true;a.removeAttribute('href');}}
-function cycle(){const b=$('certCombinedState');if(!b)return;const v=((+(b.dataset.v||0))+1)%3;b.dataset.v=String(v);b.textContent=v===1?'✅ Yes':v===2?'❌ No':'❓ Unknown / Not Checked';updateDetails();syncLegacy();applyCombinedVisibility();}
-function removeLegacyCertificationSetting(){const btn=document.querySelector('#settings [data-setting="certification"]');if(btn)return;}
-function removeLegacyCoaSetting(){const btn=document.querySelector('#settings [data-setting="coa"]');if(btn)return;}
-function buildLegacyBridge(){
-  const bridge=document.createElement('div');
-  bridge.id='legacyCertificationBridge';
-  bridge.hidden=true;
-  bridge.innerHTML='<div id="certSection"></div><select id="certService"><option value="">None</option><option>PCGS</option><option>NGC</option><option>ICG</option><option>ANACS</option><option>Other</option></select><input id="certNumber"><input id="certGrade"><input id="certUrl"><div id="coaSection"></div><button id="coaState" type="button">❓</button><input id="coaIssuer"><input id="coaNumber"><textarea id="coaNotes"></textarea>';
-  document.body.appendChild(bridge);
-}
-function hasExistingData(){
-  const ids=['certCombinedService','certCombinedNumber','certCombinedGrade','certCombinedUrl','certCombinedIssuer','certCombinedCoaNumber','certCombinedCoaNotes'];
-  return ids.some(id=>String($(id)?.value||'').trim()!=='') || (($('certCombinedState')?.dataset.v||'0')!=='0');
-}
-function certificationSettingOn(){
-  try{return JSON.parse(localStorage.getItem('lewis-settings')||'{}').certification!==false}catch(e){return true}
-}
-function applyCombinedVisibility(){
-  const section=$('certCombinedSection');
-  if(!section)return;
-  section.classList.toggle('hidden-section',!certificationSettingOn()&&!hasExistingData());
-}
-function hasExistingPaperMoneyData(){
-  return ['pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer']
-    .some(id=>String($(id)?.value||'').trim()!=='');
-}
-function patchPaperMoneySetting(){
-  if(typeof window.applySettings!=='function'||window.applySettings.__paperMoneyPatched)return;
-  const original=window.applySettings;
-  const patched=function(){
-    original();
-    const section=$('paperMoneySection');
-    if(!section)return;
-    let on=true;
-    try{on=JSON.parse(localStorage.getItem('lewis-settings')||'{}').paperMoney!==false}catch(e){}
-    section.classList.toggle('hidden-section',!on&&!hasExistingPaperMoneyData());
-  };
-  patched.__paperMoneyPatched=true;
-  window.applySettings=patched;
-  patched();
-}
-function build(){
-  if($('certCombinedSection')){patchPaperMoneySetting();return;}
-  const cert=document.querySelector('#certSection');
-  const coa=document.querySelector('#coaSection');
-  const notes=$('notes');
-  if(!cert||!coa||!notes)return;
-  buildLegacyBridge();
-  cert.remove();
-  coa.remove();
-  const wrap=document.createElement('div');
-  wrap.id='certCombinedSection';
-  wrap.className='wide card';
-  wrap.style.margin='12px 0 0';
-  wrap.innerHTML=`<h2>Certification / Certificate of Authenticity</h2><div class="grid"><label class="wide">Status<button type="button" id="certCombinedState" class="state" style="width:100%">❓ Unknown / Not Checked</button></label><div id="certCombinedDetails" class="wide"><div class="grid"><label>Certification Service<select id="certCombinedService"><option value="">None</option><option>PCGS</option><option>NGC</option><option>ICG</option><option>ANACS</option><option>Other</option></select></label><label>Certification Number<input id="certCombinedNumber"></label><label>Grade<input id="certCombinedGrade"></label><label>Certificate Issuer (if applicable)<input id="certCombinedIssuer"></label><label>Certificate Number (if applicable)<input id="certCombinedCoaNumber"></label><label class="wide">Scan / Verification Link<input id="certCombinedUrl" placeholder="https://..."><a id="certCombinedVerify" class="secondary" style="display:inline-block;margin-top:7px;padding:7px 10px;border-radius:8px;text-decoration:none;color:#111827" target="_blank" rel="noopener" hidden></a></label><label class="wide">Certificate Notes<textarea id="certCombinedCoaNotes"></textarea></label></div></div></div>`;
-  notes.parentElement.insertBefore(wrap,notes);
-  $('certCombinedState').onclick=cycle;
-  $('certCombinedService').onchange=()=>{populateVerify();syncLegacy();applyCombinedVisibility()};
-  ['certCombinedNumber','certCombinedGrade','certCombinedIssuer','certCombinedCoaNumber','certCombinedCoaNotes','certCombinedUrl'].forEach(id=>$(id).addEventListener('input',()=>{populateVerify();syncLegacy();applyCombinedVisibility()}));
-  const oldSave=$('saveBtn');
-  if(oldSave)oldSave.addEventListener('click',syncLegacy,true);
-  const oldClear=$('clearBtn');
-  if(oldClear)oldClear.addEventListener('click',()=>setTimeout(loadFromLegacy,0),true);
-  loadFromLegacy();
-  applyCombinedVisibility();
-  patchPaperMoneySetting();
-}
-function loadFromLegacy(){
-  if(!$('certCombinedState')||!$('certService'))return;
-  const z={service:$('certService').value||'',number:$('certNumber').value||'',grade:$('certGrade').value||'',url:$('certUrl').value||''};
-  const c={issuer:$('coaIssuer').value||'',number:$('coaNumber').value||'',notes:$('coaNotes').value||'',status:+($('coaState').dataset.v||0)};
-  $('certCombinedState').dataset.v=c.status===1?'1':c.status===2?'2':'0';
-  $('certCombinedState').textContent=c.status===1?'✅ Yes':c.status===2?'❌ No':'❓ Unknown / Not Checked';
-  $('certCombinedService').value=z.service;$('certCombinedNumber').value=z.number;$('certCombinedGrade').value=z.grade;$('certCombinedUrl').value=z.url;$('certCombinedIssuer').value=c.issuer;$('certCombinedCoaNumber').value=c.number;$('certCombinedCoaNotes').value=c.notes;
-  updateDetails();populateVerify();applyCombinedVisibility();patchPaperMoneySetting();
-}
-function start(){build();patchPaperMoneySetting();setInterval(loadFromLegacy,500);}
+function syncLegacy(){const v=+($('certCombinedState')?.dataset.v||0),service=$('certCombinedService')?.value||'',num=$('certCombinedNumber')?.value.trim()||'',grade=$('certCombinedGrade')?.value.trim()||'',url=$('certCombinedUrl')?.value.trim()||'',issuer=$('certCombinedIssuer')?.value.trim()||'',coaNum=$('certCombinedCoaNumber')?.value.trim()||'',coaNotes=$('certCombinedCoaNotes')?.value.trim()||'';if($('certService'))$('certService').value=service;if($('certNumber'))$('certNumber').value=num;if($('certGrade'))$('certGrade').value=grade;if($('certUrl'))$('certUrl').value=url;if($('coaIssuer'))$('coaIssuer').value=issuer;if($('coaNumber'))$('coaNumber').value=coaNum;if($('coaNotes'))$('coaNotes').value=coaNotes;if($('coaState')){$('coaState').dataset.v=String(v);$('coaState').textContent=v===1?'✅':v===2?'❌':'❓';}}
+function updateDetails(){const show=$('certCombinedState')?.dataset.v==='1',details=$('certCombinedDetails');if(details)details.hidden=!show}
+function populateVerify(){const service=$('certCombinedService')?.value||'',manual=$('certCombinedUrl')?.value.trim()||'',url=manual||services[service]||'',a=$('certCombinedVerify');if(!a)return;if(url){a.href=url;a.hidden=false;a.textContent=service?'Open '+service+' verification':'Open verification link'}else{a.hidden=true;a.removeAttribute('href')}}
+function cycle(){const b=$('certCombinedState');if(!b)return;const v=((+(b.dataset.v||0))+1)%3;b.dataset.v=String(v);b.textContent=v===1?'✅ Yes':v===2?'❌ No':'❓ Unknown / Not Checked';updateDetails();syncLegacy();applyCombinedVisibility()}
+function buildLegacyBridge(){const bridge=document.createElement('div');bridge.id='legacyCertificationBridge';bridge.hidden=true;bridge.innerHTML='<div id="certSection"></div><select id="certService"><option value="">None</option><option>PCGS</option><option>NGC</option><option>ICG</option><option>ANACS</option><option>Other</option></select><input id="certNumber"><input id="certGrade"><input id="certUrl"><div id="coaSection"></div><button id="coaState" type="button">❓</button><input id="coaIssuer"><input id="coaNumber"><textarea id="coaNotes"></textarea>';document.body.appendChild(bridge)}
+function hasExistingData(){const ids=['certCombinedService','certCombinedNumber','certCombinedGrade','certCombinedUrl','certCombinedIssuer','certCombinedCoaNumber','certCombinedCoaNotes'];return ids.some(id=>String($(id)?.value||'').trim()!=='')||(($('certCombinedState')?.dataset.v||'0')!=='0')}
+function certificationSettingOn(){try{return JSON.parse(localStorage.getItem('lewis-settings')||'{}').certification!==false}catch(e){return true}}
+function applyCombinedVisibility(){const section=$('certCombinedSection');if(!section)return;section.classList.toggle('hidden-section',!certificationSettingOn()&&!hasExistingData())}
+function removePaperMoneySetting(){const remove=()=>{const btn=document.querySelector('#settings [data-setting="paperMoney"]');if(btn){const row=btn.closest('.settings-row');if(row)row.remove()}};remove();const box=$('settings');if(box&&!box.dataset.paperMoneyObserver){box.dataset.paperMoneyObserver='1';new MutationObserver(remove).observe(box,{childList:true,subtree:true})}}
+function applyPaperMoneyCategory(){const section=$('paperMoneySection'),category=$('category');if(!section||!category)return;section.classList.toggle('hidden-section',category.value!=='Paper Money')}
+function movePaperMoneyFields(){const section=$('paperMoneySection'),category=$('category');if(!section||!category)return;const formGrid=category.closest('.grid');if(!formGrid)return;if(section.parentElement!==formGrid)formGrid.insertBefore(section,$('certCombinedSection')||$('certSection')||formGrid.lastElementChild);section.className='wide card';section.style.margin='0';section.style.padding='14px';section.style.background='#fff';const h=section.querySelector('h2');if(h)h.textContent='Paper Money Details';const printing=$('pPrinting');if(printing){const l=printing.closest('label');if(l)l.hidden=true}const issuer=$('pIssuer');if(issuer){const l=issuer.closest('label');if(l&&l.firstChild)l.firstChild.textContent='Issuer / country'}const star=$('pStar');if(star)star.innerHTML='<option value="">❓ Unknown / Not Checked</option><option value="Yes">✅ Yes</option><option value="No">❌ No</option>';applyPaperMoneyCategory()}
+function build(){if(!$('certCombinedSection')){const cert=document.querySelector('#certSection'),coa=document.querySelector('#coaSection'),notes=$('notes');if(cert&&coa&&notes){buildLegacyBridge();cert.remove();coa.remove();const wrap=document.createElement('div');wrap.id='certCombinedSection';wrap.className='wide card';wrap.style.margin='12px 0 0';wrap.innerHTML='<h2>Certification / Certificate of Authenticity</h2><div class="grid"><label class="wide">Status<button type="button" id="certCombinedState" class="state" style="width:100%">❓ Unknown / Not Checked</button></label><div id="certCombinedDetails" class="wide"><div class="grid"><label>Certification Service<select id="certCombinedService"><option value="">None</option><option>PCGS</option><option>NGC</option><option>ICG</option><option>ANACS</option><option>Other</option></select></label><label>Certification Number<input id="certCombinedNumber"></label><label>Grade<input id="certCombinedGrade"></label><label>Certificate Issuer (if applicable)<input id="certCombinedIssuer"></label><label>Certificate Number (if applicable)<input id="certCombinedCoaNumber"></label><label class="wide">Scan / Verification Link<input id="certCombinedUrl" placeholder="https://..."><a id="certCombinedVerify" class="secondary" style="display:inline-block;margin-top:7px;padding:7px 10px;border-radius:8px;text-decoration:none;color:#111827" target="_blank" rel="noopener" hidden></a></label><label class="wide">Certificate Notes<textarea id="certCombinedCoaNotes"></textarea></label></div></div></div>';notes.parentElement.insertBefore(wrap,notes);$('certCombinedState').onclick=cycle;$('certCombinedService').onchange=()=>{populateVerify();syncLegacy();applyCombinedVisibility()};['certCombinedNumber','certCombinedGrade','certCombinedIssuer','certCombinedCoaNumber','certCombinedCoaNotes','certCombinedUrl'].forEach(id=>$(id).addEventListener('input',()=>{populateVerify();syncLegacy();applyCombinedVisibility()}));const oldSave=$('saveBtn');if(oldSave)oldSave.addEventListener('click',syncLegacy,true);const oldClear=$('clearBtn');if(oldClear)oldClear.addEventListener('click',()=>setTimeout(loadFromLegacy,0),true);loadFromLegacy();applyCombinedVisibility()}}movePaperMoneyFields();removePaperMoneySetting();if($('category')&&!$('category').dataset.paperMoneyHandler){$('category').dataset.paperMoneyHandler='1';$('category').addEventListener('change',applyPaperMoneyCategory)}}
+function loadFromLegacy(){if(!$('certCombinedState')||!$('certService'))return;const z={service:$('certService').value||'',number:$('certNumber').value||'',grade:$('certGrade').value||'',url:$('certUrl').value||''},c={issuer:$('coaIssuer').value||'',number:$('coaNumber').value||'',notes:$('coaNotes').value||'',status:+($('coaState').dataset.v||0)};$('certCombinedState').dataset.v=c.status===1?'1':c.status===2?'2':'0';$('certCombinedState').textContent=c.status===1?'✅ Yes':c.status===2?'❌ No':'❓ Unknown / Not Checked';$('certCombinedService').value=z.service;$('certCombinedNumber').value=z.number;$('certCombinedGrade').value=z.grade;$('certCombinedUrl').value=z.url;$('certCombinedIssuer').value=c.issuer;$('certCombinedCoaNumber').value=c.number;$('certCombinedCoaNotes').value=c.notes;updateDetails();populateVerify();applyCombinedVisibility();movePaperMoneyFields();removePaperMoneySetting()}
+function start(){build();setInterval(()=>{removePaperMoneySetting();movePaperMoneyFields();applyPaperMoneyCategory()},500);if($('category'))applyPaperMoneyCategory()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
