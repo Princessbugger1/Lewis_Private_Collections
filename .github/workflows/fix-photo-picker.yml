@@ -1,0 +1,33 @@
+name: Fix photo picker
+on:
+  push:
+    branches: [clean-safe-fix-v2]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove camera-only capture attribute from all three photo inputs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='accept="image/*" capture="environment"'
+          new='accept="image/*"'
+          count=s.count(old)
+          if count != 3:
+              raise SystemExit(f'Refusing to patch: expected 3 photo inputs, found {count}.')
+          s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          print('Patched all 3 photo inputs.')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Allow choosing existing photos on phone'
+          git push
