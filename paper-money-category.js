@@ -13,12 +13,10 @@ function removePaperMoneySetting(){
 function movePaperMoneySection(){
   const section=$('paperMoneySection'),category=$('category');
   if(!section||!category)return;
-  const grid=category.closest('.grid');
-  if(!grid)return;
   const categoryLabel=category.closest('label');
-  if(categoryLabel&&section.parentElement===grid&&section.previousElementSibling!==categoryLabel){
-    categoryLabel.after(section);
-  }else if(categoryLabel&&section.parentElement!==grid){
+  const grid=categoryLabel?.parentElement;
+  if(!categoryLabel||!grid)return;
+  if(section.parentElement!==grid || section.previousElementSibling!==categoryLabel){
     categoryLabel.after(section);
   }
   section.classList.add('wide');
@@ -33,13 +31,18 @@ function updateVisibility(){
   const section=$('paperMoneySection'),category=$('category');
   if(!section||!category)return;
   const isPaper=category.value==='Paper Money';
+  // Category controls new/empty Paper Money fields. Existing Paper Money data
+  // remains visible and editable while editing an item, even if its category changes.
   section.classList.toggle('hidden-section',!isPaper&&!hasPaperMoneyData());
 }
 function bind(){
   const category=$('category');
   if(category&&!category.dataset.paperMoneyBound){
     category.dataset.paperMoneyBound='1';
-    category.addEventListener('change',()=>{movePaperMoneySection();updateVisibility();});
+    category.addEventListener('change',()=>{
+      movePaperMoneySection();
+      updateVisibility();
+    });
   }
   paperIds.forEach(id=>$(id)?.addEventListener('input',updateVisibility));
 }
@@ -51,9 +54,14 @@ function init(){
   const settings=$('settings');
   if(settings&&!settings.dataset.paperMoneyObserver){
     settings.dataset.paperMoneyObserver='1';
-    new MutationObserver(()=>removePaperMoneySetting()).observe(settings,{childList:true,subtree:true});
+    new MutationObserver(removePaperMoneySetting).observe(settings,{childList:true,subtree:true});
   }
-  setInterval(()=>{movePaperMoneySection();removePaperMoneySetting();updateVisibility();bind();},500);
+  setInterval(()=>{
+    movePaperMoneySection();
+    removePaperMoneySetting();
+    updateVisibility();
+    bind();
+  },500);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
