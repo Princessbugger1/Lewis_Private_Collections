@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id);
 const services={PCGS:'https://www.pcgs.com/cert',NGC:'https://www.ngccoin.com/CERTLOOKUP/',ANACS:'https://anacs.com/verify/',ICG:'https://www.icgcoin.com/'};
 function syncLegacy(){
-  const yes=$('certCombinedState')?.dataset.v==='1';
+  const v=+( $('certCombinedState')?.dataset.v||0);
   const service=$('certCombinedService')?.value||'';
   const num=$('certCombinedNumber')?.value.trim()||'';
   const grade=$('certCombinedGrade')?.value.trim()||'';
@@ -18,8 +18,8 @@ function syncLegacy(){
   $('coaIssuer').value=issuer;
   $('coaNumber').value=coaNum;
   $('coaNotes').value=coaNotes;
-  $('coaState').dataset.v=yes?1:0;
-  $('coaState').textContent=yes?'✅':'❓';
+  $('coaState').dataset.v=String(v);
+  $('coaState').textContent=v===1?'✅':v===2?'❌':'❓';
 }
 function updateDetails(){
   const show=$('certCombinedState')?.dataset.v==='1';
@@ -28,7 +28,8 @@ function updateDetails(){
 }
 function populateVerify(){
   const service=$('certCombinedService')?.value||'';
-  const url=$('certCombinedUrl')?.value.trim()||services[service]||'';
+  const manual=$('certCombinedUrl')?.value.trim()||'';
+  const url=manual||services[service]||'';
   const a=$('certCombinedVerify');
   if(!a)return;
   if(url){a.href=url;a.hidden=false;a.textContent=service?'Open '+service+' verification':'Open verification link';}
