@@ -42,12 +42,29 @@ function certificationSettingOn(){
 function applyCombinedVisibility(){
   const section=$('certCombinedSection');
   if(!section)return;
-  // The setting controls availability of an empty field for new data only.
-  // Existing certification/COA data always keeps the Edit Item section visible and editable.
   section.classList.toggle('hidden-section',!certificationSettingOn()&&!hasExistingData());
 }
+function hasExistingPaperMoneyData(){
+  return ['pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer']
+    .some(id=>String($(id)?.value||'').trim()!=='');
+}
+function patchPaperMoneySetting(){
+  if(typeof window.applySettings!=='function'||window.applySettings.__paperMoneyPatched)return;
+  const original=window.applySettings;
+  const patched=function(){
+    original();
+    const section=$('paperMoneySection');
+    if(!section)return;
+    let on=true;
+    try{on=JSON.parse(localStorage.getItem('lewis-settings')||'{}').paperMoney!==false}catch(e){}
+    section.classList.toggle('hidden-section',!on&&!hasExistingPaperMoneyData());
+  };
+  patched.__paperMoneyPatched=true;
+  window.applySettings=patched;
+  patched();
+}
 function build(){
-  if($('certCombinedSection'))return;
+  if($('certCombinedSection')){patchPaperMoneySetting();return;}
   const cert=document.querySelector('#certSection');
   const coa=document.querySelector('#coaSection');
   const notes=$('notes');
@@ -70,6 +87,7 @@ function build(){
   if(oldClear)oldClear.addEventListener('click',()=>setTimeout(loadFromLegacy,0),true);
   loadFromLegacy();
   applyCombinedVisibility();
+  patchPaperMoneySetting();
 }
 function loadFromLegacy(){
   if(!$('certCombinedState')||!$('certService'))return;
@@ -78,8 +96,8 @@ function loadFromLegacy(){
   $('certCombinedState').dataset.v=c.status===1?'1':c.status===2?'2':'0';
   $('certCombinedState').textContent=c.status===1?'✅ Yes':c.status===2?'❌ No':'❓ Unknown / Not Checked';
   $('certCombinedService').value=z.service;$('certCombinedNumber').value=z.number;$('certCombinedGrade').value=z.grade;$('certCombinedUrl').value=z.url;$('certCombinedIssuer').value=c.issuer;$('certCombinedCoaNumber').value=c.number;$('certCombinedCoaNotes').value=c.notes;
-  updateDetails();populateVerify();applyCombinedVisibility();
+  updateDetails();populateVerify();applyCombinedVisibility();patchPaperMoneySetting();
 }
-function start(){build();setInterval(loadFromLegacy,500);}
+function start(){build();patchPaperMoneySetting();setInterval(loadFromLegacy,500);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
