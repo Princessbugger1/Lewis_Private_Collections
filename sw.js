@@ -1,4 +1,4 @@
-const CACHE='lewis-private-collections-v23';
+const CACHE='lewis-private-collections-v24';
 const SCRIPTS=['./header-back.js','./cert-combine.js','./paper-money-category.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(async c=>{for(const s of SCRIPTS){try{await c.add(s)}catch(_){}}}).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
