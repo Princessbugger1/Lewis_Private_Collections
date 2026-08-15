@@ -23,8 +23,21 @@ function syncLegacy(){
 function updateDetails(){const show=$('certCombinedState')?.dataset.v==='1';const details=$('certCombinedDetails');if(details)details.hidden=!show;}
 function populateVerify(){const service=$('certCombinedService')?.value||'';const manual=$('certCombinedUrl')?.value.trim()||'';const url=manual||services[service]||'';const a=$('certCombinedVerify');if(!a)return;if(url){a.href=url;a.hidden=false;a.textContent=service?'Open '+service+' verification':'Open verification link';}else{a.hidden=true;a.removeAttribute('href');}}
 function cycle(){const b=$('certCombinedState');if(!b)return;const v=((+(b.dataset.v||0))+1)%3;b.dataset.v=String(v);b.textContent=v===1?'✅ Yes':v===2?'❌ No':'❓ Unknown / Not Checked';updateDetails();syncLegacy();}
-function removeLegacyCertificationSetting(){const btn=document.querySelector('#settings [data-setting="certification"]');if(btn){const row=btn.closest('.settings-row');if(row)row.remove();}}
 function removeLegacyCoaSetting(){const btn=document.querySelector('#settings [data-setting="coa"]');if(btn){const row=btn.closest('.settings-row');if(row)row.remove();}}
+function ensureCombinedSetting(){
+  const box=$('settings');
+  if(!box)return;
+  const btn=box.querySelector('[data-setting="certification"]');
+  if(btn){
+    const label=btn.previousElementSibling;
+    if(label)label.textContent='Certification / Certificate of Authenticity';
+  }
+  const settings=window.__lewisSettings;
+  let enabled=true;
+  try{const s=JSON.parse(localStorage.getItem('lewis-settings')||'{}');enabled=s.certification!==false}catch(e){}
+  const section=$('certCombinedSection');
+  if(section)section.classList.toggle('hidden-section',!enabled);
+}
 function buildLegacyBridge(){
   const bridge=document.createElement('div');
   bridge.id='legacyCertificationBridge';
@@ -33,7 +46,7 @@ function buildLegacyBridge(){
   document.body.appendChild(bridge);
 }
 function build(){
-  if($('certCombinedSection'))return;
+  if($('certCombinedSection')){ensureCombinedSetting();return;}
   const cert=document.querySelector('#certSection');
   const coa=document.querySelector('#coaSection');
   const notes=$('notes');
@@ -55,7 +68,7 @@ function build(){
   const oldClear=$('clearBtn');
   if(oldClear)oldClear.addEventListener('click',()=>setTimeout(loadFromLegacy,0),true);
   loadFromLegacy();
-  removeLegacyCertificationSetting();
+  ensureCombinedSetting();
   removeLegacyCoaSetting();
 }
 function loadFromLegacy(){
@@ -67,6 +80,6 @@ function loadFromLegacy(){
   $('certCombinedService').value=z.service;$('certCombinedNumber').value=z.number;$('certCombinedGrade').value=z.grade;$('certCombinedUrl').value=z.url;$('certCombinedIssuer').value=c.issuer;$('certCombinedCoaNumber').value=c.number;$('certCombinedCoaNotes').value=c.notes;
   updateDetails();populateVerify();
 }
-function start(){build();removeLegacyCertificationSetting();removeLegacyCoaSetting();setInterval(loadFromLegacy,500);setInterval(removeLegacyCertificationSetting,500);setInterval(removeLegacyCoaSetting,500);}
+function start(){build();ensureCombinedSetting();removeLegacyCoaSetting();setInterval(loadFromLegacy,500);setInterval(ensureCombinedSetting,500);setInterval(removeLegacyCoaSetting,500);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
