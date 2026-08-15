@@ -1,0 +1,56 @@
+name: Move certification into edit form
+
+on:
+  push:
+    branches: [fix-certification-location]
+
+permissions:
+  contents: write
+
+jobs:
+  move-certification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move certification block between location and notes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='CERTIFICATION LOCATION FIX v1'
+          if marker in s:
+              print('Already patched')
+              raise SystemExit(0)
+
+          m=re.search(r'<section id="certSection"[^>]*>.*?</section>', s)
+          if not m:
+              raise SystemExit('Refusing to modify: certification section not found.')
+          cert=m.group(0)
+          if s.count('id="certSection"') != 1:
+              raise SystemExit('Refusing to modify: expected exactly one certification section.')
+          if '<input id="location"' not in s or '<textarea id="notes"' not in s:
+              raise SystemExit('Refusing to modify: location/notes fields not found.')
+
+          cert=cert.replace('<section id="certSection"', '<div id="certSection"', 1)
+          if not cert.endswith('</section>'):
+              raise SystemExit('Refusing to modify: unexpected certification markup.')
+          cert=cert[:-len('</section>')] + '</div>'
+          cert=cert.replace('class="card"', 'class="wide card"', 1)
+
+          s=s.replace(cert if False else m.group(0), '', 1)
+          anchor='<label>Location<input id="location" placeholder="Album / box / case"></label><label class="wide">Notes'
+          if s.count(anchor) != 1:
+              raise SystemExit('Refusing to modify: expected location-to-notes anchor not found exactly once.')
+          s=s.replace(anchor, '<label>Location<input id="location" placeholder="Album / box / case"></label>'+cert+'<label class="wide">Notes', 1)
+          s=s.replace('</script></body></html>', '/* CERTIFICATION LOCATION FIX v1 */</script></body></html>', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Move certification between location and notes"
+          git push
