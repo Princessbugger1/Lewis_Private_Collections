@@ -1,0 +1,1 @@
+(function(){window.LewisCatalogCertification={empty(){return{service:'',number:'',grade:'',url:''}},normalize(v){v=v||{};return{service:String(v.service||''),number:String(v.number||''),grade:String(v.grade||''),url:String(v.url||'')}},hasVerificationLink(v){return Boolean(this.normalize(v).url)}}})();
