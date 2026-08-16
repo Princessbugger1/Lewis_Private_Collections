@@ -1,0 +1,1 @@
+Temporary marker for safe Paper Notes behavior patch workflow. Do not use as catalog logic.
