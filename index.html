@@ -107,7 +107,7 @@
   function addControls(){
     ids.forEach((id,n)=>{
       const input=document.getElementById(id); if(!input)return;
-      let row=input.parentElement.querySelector('[data-photo-row="'+n+'"]');
+      let row=input.closest('[data-photo-row]');
       if(!row){
         row=document.createElement('div');row.dataset.photoRow=n;row.style.cssText='display:flex;gap:6px;align-items:center;margin-top:4px';
         input.parentNode.insertBefore(row,input);row.appendChild(input);input.style.marginTop='0';input.style.flex='1';
