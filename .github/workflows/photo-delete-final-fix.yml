@@ -1,7 +1,7 @@
 name: Apply final photo delete fix
 on:
-  push:
-    branches: [photo-delete-final-fix]
+  pull_request:
+    types: [opened, synchronize]
 permissions:
   contents: write
 jobs:
