@@ -139,7 +139,7 @@ function init(){
       updateSaveButton();
       bind();
       installPhotoControls();
-    }).observe(root,{childList:true,subtree:true,characterData:true});
+    }).observe(root,{childList:true,subtree:true});
   }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
