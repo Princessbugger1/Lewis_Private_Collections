@@ -33,7 +33,8 @@ function updateVisibility(){
 function updateSaveButton(){
   const btn=$('saveBtn');
   if(!btn)return;
-  if(btn.textContent.trim()==='Save changes'||btn.textContent.trim()==='Save Changes'||btn.textContent.trim()==='Save Changes / Exit')btn.textContent='Save / Exit';
+  const t=btn.textContent.trim();
+  if(t==='Save changes'||t==='Save Changes'||t==='Save Changes / Exit'||t==='Save / Exit')btn.textContent='Save / Exit';
 }
 function photoSignature(){
   return ['category','country','type','denom','year','mint','series','grade','variety','quantity','composition','purchase','value','collection','location'].map(id=>String($(id)?.value||'').trim()).join('\u001f');
@@ -51,14 +52,17 @@ function installPhotoControls(){
     if(!parent)return;
     let btn=parent.querySelector('[data-photo-delete="'+i+'"]');
     const hasPhoto=!!(preview.src&&!preview.hidden);
-    if(!hasPhoto){if(btn)btn.remove();return;}
+    if(!hasPhoto){if(btn)btn.remove();input.style.width='100%';input.style.display='block';return;}
     if(btn)return;
     btn=document.createElement('button');
     btn.type='button';
     btn.dataset.photoDelete=String(i);
     btn.textContent='🗑️ Delete';
     btn.title='Delete this photo';
-    btn.style.cssText='margin:6px 0 0 6px;padding:6px 8px;font-size:11px;background:#fee2e2;color:#991b1b;border-radius:8px;vertical-align:middle;';
+    btn.style.cssText='display:inline-flex;width:auto;min-width:0;max-width:88px;box-sizing:border-box;align-items:center;justify-content:center;white-space:nowrap;margin:4px 0 0 4px;padding:5px 7px;font-size:11px;line-height:1.1;background:#fee2e2;color:#991b1b;border-radius:8px;vertical-align:middle;';
+    input.style.width='calc(100% - 96px)';
+    input.style.display='inline-block';
+    input.style.verticalAlign='middle';
     btn.addEventListener('click',()=>{
       const oldSrc=findPhotoSource(i);
       if(!oldSrc)return;
@@ -70,6 +74,8 @@ function installPhotoControls(){
       preview.src='';
       preview.hidden=true;
       btn.remove();
+      input.style.width='100%';
+      input.style.display='block';
     });
     parent.appendChild(btn);
   });
@@ -133,7 +139,7 @@ function init(){
       updateSaveButton();
       bind();
       installPhotoControls();
-    }).observe(root,{childList:true,subtree:true});
+    }).observe(root,{childList:true,subtree:true,characterData:true});
   }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
