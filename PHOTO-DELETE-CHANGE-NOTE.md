@@ -1,1 +1,0 @@
-Photo upload controls now include a delete button with Keep/Delete confirmation. This is implemented as a targeted UI patch and preserves existing saved catalog data.
