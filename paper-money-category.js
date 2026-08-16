@@ -44,6 +44,31 @@ function findPhotoSource(i){
   if(p&&!p.hidden&&p.src)return p.src;
   return '';
 }
+function setPhotoLayout(input,btn){
+  const mobile=window.matchMedia('(max-width: 600px)').matches;
+  if(!btn){
+    input.style.width='100%';
+    input.style.display='block';
+    return;
+  }
+  if(mobile){
+    input.style.width='100%';
+    input.style.display='block';
+    input.style.verticalAlign='initial';
+    btn.style.display='flex';
+    btn.style.width='auto';
+    btn.style.maxWidth='none';
+    btn.style.margin='6px 0 0 0';
+  }else{
+    input.style.width='calc(100% - 96px)';
+    input.style.display='inline-block';
+    input.style.verticalAlign='middle';
+    btn.style.display='inline-flex';
+    btn.style.width='auto';
+    btn.style.maxWidth='88px';
+    btn.style.margin='4px 0 0 4px';
+  }
+}
 function installPhotoControls(){
   PHOTO_IDS.forEach((id,i)=>{
     const input=$(id),preview=$('preview'+(i+1));
@@ -52,17 +77,14 @@ function installPhotoControls(){
     if(!parent)return;
     let btn=parent.querySelector('[data-photo-delete="'+i+'"]');
     const hasPhoto=!!(preview.src&&!preview.hidden);
-    if(!hasPhoto){if(btn)btn.remove();input.style.width='100%';input.style.display='block';return;}
-    if(btn)return;
+    if(!hasPhoto){if(btn)btn.remove();setPhotoLayout(input,null);return;}
+    if(btn){setPhotoLayout(input,btn);return;}
     btn=document.createElement('button');
     btn.type='button';
     btn.dataset.photoDelete=String(i);
     btn.textContent='🗑️ Delete';
     btn.title='Delete this photo';
     btn.style.cssText='display:inline-flex;width:auto;min-width:0;max-width:88px;box-sizing:border-box;align-items:center;justify-content:center;white-space:nowrap;margin:4px 0 0 4px;padding:5px 7px;font-size:11px;line-height:1.1;background:#fee2e2;color:#991b1b;border-radius:8px;vertical-align:middle;';
-    input.style.width='calc(100% - 96px)';
-    input.style.display='inline-block';
-    input.style.verticalAlign='middle';
     btn.addEventListener('click',()=>{
       const oldSrc=findPhotoSource(i);
       if(!oldSrc)return;
@@ -74,10 +96,10 @@ function installPhotoControls(){
       preview.src='';
       preview.hidden=true;
       btn.remove();
-      input.style.width='100%';
-      input.style.display='block';
+      setPhotoLayout(input,null);
     });
     parent.appendChild(btn);
+    setPhotoLayout(input,btn);
   });
 }
 function applyPendingPhotoDeletes(){
@@ -120,6 +142,10 @@ function bind(){
   if(save&&!save.dataset.photoDeleteSaveBound){
     save.dataset.photoDeleteSaveBound='1';
     save.addEventListener('click',applyPendingPhotoDeletes,true);
+  }
+  if(!window.__photoLayoutResizeBound){
+    window.__photoLayoutResizeBound=true;
+    window.addEventListener('resize',()=>installPhotoControls());
   }
 }
 function init(){
