@@ -3,6 +3,13 @@
 const $=id=>document.getElementById(id);
 const paperIds=['pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer'];
 const PHOTO_IDS=['photo1','photo2','photo3'];
+function addMobilePhotoLayout(){
+  if(document.getElementById('mobilePhotoDeleteLayout'))return;
+  const style=document.createElement('style');
+  style.id='mobilePhotoDeleteLayout';
+  style.textContent='@media(max-width:600px){body[data-display-mode="phone"] .photoBox label{display:block}body[data-display-mode="phone"] .photoBox input[type="file"]{display:block!important;width:100%!important;margin-top:4px}body[data-display-mode="phone"] .photoBox [data-photo-delete]{display:flex!important;width:auto!important;max-width:none!important;margin:7px auto 0!important;box-sizing:border-box;position:static!important;float:none!important;clear:both!important}}';
+  document.head.appendChild(style);
+}
 function removePaperNotesSetting(){
   const box=$('settings');
   if(!box)return;
@@ -123,6 +130,7 @@ function bind(){
   }
 }
 function init(){
+  addMobilePhotoLayout();
   movePaperNotesSection();
   removePaperNotesSetting();
   bind();
