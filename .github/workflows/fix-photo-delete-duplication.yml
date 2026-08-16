@@ -15,8 +15,8 @@ jobs:
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text()
-          old = "let row=input.parentElement.querySelector('[data-photo-row=\\\"'+n+'\\\"]');"
-          new = "let row=input.closest('[data-photo-row]');"
+          old = '''let row=input.parentElement.querySelector('[data-photo-row="'+n+'"]');'''
+          new = '''let row=input.closest('[data-photo-row]');'''
           if old not in s:
               raise SystemExit('Target line not found; stopping safely.')
           p.write_text(s.replace(old, new, 1))
