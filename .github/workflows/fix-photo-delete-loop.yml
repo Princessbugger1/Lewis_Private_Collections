@@ -1,0 +1,31 @@
+name: Fix photo delete loop
+on:
+  push:
+    branches: [photo-delete-loop-fix]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove repeating binder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          old = 'bind();setInterval(bind,500);'
+          new = 'bind();'
+          if old not in s:
+              raise SystemExit('Target line not found; stopping safely.')
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Stop repeated photo delete control binding'
+          git push
