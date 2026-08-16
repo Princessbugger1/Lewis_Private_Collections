@@ -2,15 +2,15 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const paperIds=['pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer'];
-function removePaperMoneySetting(){
+function removePaperNotesSetting(){
   const box=$('settings');
   if(!box)return;
   [...box.querySelectorAll('.settings-row')].forEach(row=>{
     const label=row.querySelector('span');
-    if(label&&label.textContent.trim()==='Paper Money details')row.remove();
+    if(label&&label.textContent.trim()==='Paper Notes details')row.remove();
   });
 }
-function movePaperMoneySection(){
+function movePaperNotesSection(){
   const section=$('paperMoneySection'),category=$('category');
   if(!section||!category)return;
   const categoryLabel=category.closest('label');
@@ -24,41 +24,41 @@ function movePaperMoneySection(){
   section.style.padding='10px';
   section.style.background='#f9fafb';
 }
-function hasPaperMoneyData(){
+function hasPaperNotesData(){
   return paperIds.some(id=>String($(id)?.value||'').trim()!=='');
 }
 function updateVisibility(){
   const section=$('paperMoneySection'),category=$('category');
   if(!section||!category)return;
-  const isPaper=category.value==='Paper Money';
-  // Category controls new/empty Paper Money fields. Existing Paper Money data
+  const isPaper=category.value==='Paper Notes';
+  // Category controls new/empty Paper Notes fields. Existing Paper Notes data
   // remains visible and editable while editing an item, even if its category changes.
-  section.classList.toggle('hidden-section',!isPaper&&!hasPaperMoneyData());
+  section.classList.toggle('hidden-section',!isPaper&&!hasPaperNotesData());
 }
 function bind(){
   const category=$('category');
-  if(category&&!category.dataset.paperMoneyBound){
-    category.dataset.paperMoneyBound='1';
+  if(category&&!category.dataset.paperNotesBound){
+    category.dataset.paperNotesBound='1';
     category.addEventListener('change',()=>{
-      movePaperMoneySection();
+      movePaperNotesSection();
       updateVisibility();
     });
   }
   paperIds.forEach(id=>$(id)?.addEventListener('input',updateVisibility));
 }
 function init(){
-  movePaperMoneySection();
-  removePaperMoneySetting();
+  movePaperNotesSection();
+  removePaperNotesSetting();
   bind();
   updateVisibility();
   const settings=$('settings');
-  if(settings&&!settings.dataset.paperMoneyObserver){
-    settings.dataset.paperMoneyObserver='1';
-    new MutationObserver(removePaperMoneySetting).observe(settings,{childList:true,subtree:true});
+  if(settings&&!settings.dataset.paperNotesObserver){
+    settings.dataset.paperNotesObserver='1';
+    new MutationObserver(removePaperNotesSetting).observe(settings,{childList:true,subtree:true});
   }
   setInterval(()=>{
-    movePaperMoneySection();
-    removePaperMoneySetting();
+    movePaperNotesSection();
+    removePaperNotesSetting();
     updateVisibility();
     bind();
   },500);
