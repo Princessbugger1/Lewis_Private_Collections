@@ -1,7 +1,7 @@
 name: Apply coin flag style
 on:
-  push:
-    branches: [fix-coin-flag-style]
+  pull_request:
+    types: [opened, synchronize]
 permissions:
   contents: write
 jobs:
