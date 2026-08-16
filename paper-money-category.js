@@ -35,6 +35,11 @@ function updateVisibility(){
   // remains visible and editable while editing an item, even if its category changes.
   section.classList.toggle('hidden-section',!isPaper&&!hasPaperNotesData());
 }
+function updateSaveButton(){
+  const btn=$('saveBtn');
+  if(!btn)return;
+  if(btn.textContent.trim()==='Save Changes')btn.textContent='Save Changes / Exit';
+}
 function bind(){
   const category=$('category');
   if(category&&!category.dataset.paperNotesBound){
@@ -51,6 +56,7 @@ function init(){
   removePaperNotesSetting();
   bind();
   updateVisibility();
+  updateSaveButton();
   const settings=$('settings');
   if(settings&&!settings.dataset.paperNotesObserver){
     settings.dataset.paperNotesObserver='1';
@@ -60,6 +66,7 @@ function init(){
     movePaperNotesSection();
     removePaperNotesSetting();
     updateVisibility();
+    updateSaveButton();
     bind();
   },500);
 }
