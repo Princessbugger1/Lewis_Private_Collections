@@ -1,0 +1,43 @@
+name: Apply Paper Notes form fix
+
+on:
+  push:
+    branches: [paper-notes-fix]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, 'Apply Paper Notes form fix') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch only Paper Notes behavior
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='PAPER NOTES FORM FIX v1'
+          if marker in s:
+              raise SystemExit(0)
+          for needle in ['<option>Paper Notes</option>','<section id="paperMoneySection"','<input id="pSerial">','<select id="pStar">']:
+              if needle not in s:
+                  raise SystemExit(f'Refusing to modify: missing {needle}')
+          s=s.replace('<h2>Paper Money details</h2>','<h2>Paper Notes details</h2>',1)
+          s=s.replace("paperMoney:'Paper Money details'","paperMoney:'Paper Notes details'",1)
+          fix='''<script data-paper-notes-form-fix="1">\n(function(){\n  const cat=document.getElementById('category');\n  const paper=document.getElementById('paperMoneySection');\n  if(!cat||!paper)return;\n  const coinOnly=['mint','proofState','commemorativeState','composition'];\n  function apply(){\n    const isPaper=cat.value==='Paper Notes';\n    paper.classList.toggle('hidden-section',!isPaper);\n    coinOnly.forEach(id=>{\n      const el=document.getElementById(id);\n      if(!el)return;\n      const label=el.closest('label');\n      if(label)label.classList.toggle('hidden-section',isPaper);\n    });\n  }\n  cat.addEventListener('change',apply);\n  apply();\n})();\n</script>\n'''
+          if '</body>' not in s:
+              raise SystemExit('Refusing to modify: closing body tag not found.')
+          s=s.replace('</body>',fix+'</body>',1)
+          s=s.replace('</body></html>', '/* PAPER NOTES FORM FIX v1 */</body></html>', 1) if 'PAPER NOTES FORM FIX v1' not in s else s
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Apply Paper Notes form fix"
+          git push
