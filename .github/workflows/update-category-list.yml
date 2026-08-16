@@ -37,14 +37,10 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          expected=['Coins','Commemorative','Bullion','Sets','Medals','Tokens / Exonumia','Ancients','Error','Counterfeit','Paper Notes','Folder 1','Folder 2']
-          if 'data-category-list-fix="v1"' not in s: raise SystemExit('Missing category fix marker')
+          expected='<label>Category<select id="category"><option>Coins</option><option>Commemorative</option><option>Bullion</option><option>Sets</option><option>Medals</option><option>Tokens / Exonumia</option><option>Ancients</option><option>Error</option><option>Counterfeit</option><option>Paper Notes</option><option>Folder 1</option><option>Folder 2</option></select></label>'
+          if expected not in s: raise SystemExit('Category dropdown does not match the requested order.')
           if 'id="folderName1"' not in s or 'id="folderName2"' not in s: raise SystemExit('Missing folder rename controls')
-          if '<option>Other</option>' in s: raise SystemExit('Other is still in the category dropdown')
-          if '<option>Paper Money</option>' in s: raise SystemExit('Paper Money is still in the category dropdown')
-          if '<option>Commemoratives</option>' in s: raise SystemExit('Commemoratives is still in the category dropdown')
-          for x in expected:
-              if x not in s: raise SystemExit(f'Missing category/folder label: {x}')
+          if 'data-category-list-fix="v1"' not in s: raise SystemExit('Missing category fix marker')
           print('Category patch verification passed.')
           PY
       - name: Remove temporary workflow and commit the catalog change
