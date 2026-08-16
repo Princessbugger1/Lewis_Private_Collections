@@ -1,0 +1,40 @@
+name: Compact Proof and Commemorative controls
+
+on:
+  push:
+    branches: [fix-proof-commemorative-size]
+
+permissions:
+  contents: write
+
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compact only the Proof and Commemorative controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          old = "b.style.width='100%';b.style.minWidth='0';"
+          new = "b.style.width='max-content';b.style.minWidth='0';b.style.justifySelf='start';"
+          if old not in s:
+              raise SystemExit('Expected Proof/Commemorative sizing code was not found; stopping safely.')
+          s2 = s.replace(old, new, 1)
+          p.write_text(s2)
+          PY
+      - name: Commit only the intended file change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --exit-code --quiet && exit 0 || true
+          git commit -m "Size Proof and Commemorative boxes to their labels"
+          git push
+      - name: Remove temporary workflow
+        run: |
+          git rm .github/workflows/compact-proof-commemorative.yml
+          git commit -m "Remove temporary editing workflow"
+          git push
