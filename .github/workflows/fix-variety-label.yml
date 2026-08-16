@@ -16,27 +16,25 @@ jobs:
           import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          marker = 'VARIETY LABEL ONLY v1'
+          marker = 'VARIETY LABEL ONLY v2'
           if marker in s:
               print('Already patched; stopping safely.')
               raise SystemExit(0)
-          patterns = [r'Variety Checked', r'Variety check', r'variety checked', r'variety check']
-          matches = [(pat, len(re.findall(pat, s))) for pat in patterns]
-          hits = [(pat, n) for pat, n in matches if n]
-          if len(hits) != 1 or hits[0][1] != 1:
-              raise SystemExit(f'Refusing to patch: expected exactly one Variety label, found {hits}.')
-          pat = hits[0][0]
-          s = re.sub(pat, 'Variety', s, count=1)
-          s = s.replace('</script></body></html>', '/* VARIETY LABEL ONLY v1 */</script></body></html>', 1)
+          pat = r'Variety check'
+          count = len(re.findall(pat, s))
+          if count != 3:
+              raise SystemExit(f'Refusing to patch: expected exactly 3 occurrences of the visible Variety check wording, found {count}.')
+          s = re.sub(pat, 'Variety', s)
+          s = s.replace('</script></body></html>', '/* VARIETY LABEL ONLY v2 */</script></body></html>', 1)
           p.write_text(s, encoding='utf-8')
-          print(f'Changed only label text matching: {pat}')
+          print('Changed all three matching Variety check labels to Variety; behavior untouched.')
           PY
       - name: Commit and remove temporary workflow
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git commit -m 'Rename Variety Checked to Variety'
+          git commit -m 'Rename Variety check labels to Variety'
           git rm .github/workflows/fix-variety-label.yml
           git commit -m 'Remove temporary variety-label workflow'
           git push
