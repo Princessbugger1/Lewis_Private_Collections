@@ -1,0 +1,57 @@
+name: Update category list safely
+on:
+  push:
+    branches: [update-category-list]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch only the category controls
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='<label>Category<select id="category"><option>Coins</option><option>Tokens / Exonumia</option><option>Medals</option><option>Commemoratives</option><option>Paper Money</option><option>Sets</option><option>Other</option><option>Folder 1</option><option>Folder 2</option></select></label>'
+          new='<label>Category<select id="category"><option>Coins</option><option>Commemorative</option><option>Bullion</option><option>Sets</option><option>Medals</option><option>Tokens / Exonumia</option><option>Ancients</option><option>Error</option><option>Counterfeit</option><option>Paper Notes</option><option>Folder 1</option><option>Folder 2</option></select></label>'
+          if s.count(old) != 1:
+              raise SystemExit(f'Refusing to patch category list: expected 1 exact match, found {s.count(old)}.')
+          s=s.replace(old,new)
+          marker='<div id="settings"></div>'
+          folder_ui='<div id="folderNames" class="settings-row" style="display:block"><span>Custom folders</span><div class="grid" style="margin-top:6px"><label>Folder 1<input id="folderName1" value="Folder 1"></label><label>Folder 2<input id="folderName2" value="Folder 2"></label></div><p class="small">Rename either folder. Existing items in that folder follow the new name.</p></div>'
+          if s.count(marker) != 1:
+              raise SystemExit(f'Refusing to patch folder settings: expected 1 settings marker, found {s.count(marker)}.')
+          s=s.replace(marker, marker+folder_ui, 1)
+          script='''<script data-category-list-fix="v1">\n(function(){\n  const NAME_KEY='lewis-folder-names-v1', defaults={folder1:'Folder 1',folder2:'Folder 2'};\n  let names={...defaults};\n  try{names={...defaults,...JSON.parse(localStorage.getItem(NAME_KEY)||'{}')}}catch(e){}\n  const escLocal=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));\n  function items(){try{return JSON.parse(localStorage.getItem('lewis-private-collections-v8')||'[]')}catch(e){return []}}\n  function apply(){\n    const sel=document.getElementById('category'); if(!sel)return;\n    const current=sel.value;\n    const cats=['Coins','Commemorative','Bullion','Sets','Medals','Tokens / Exonumia','Ancients','Error','Counterfeit','Paper Notes'];\n    sel.innerHTML=cats.map(x=>'<option>'+escLocal(x)+'</option>').join('')+`<option>${escLocal(names.folder1)}</option><option>${escLocal(names.folder2)}</option>`;\n    sel.value=[...sel.options].some(o=>o.value===current)?current:'Coins';\n  }\n  function show(){\n    const a=document.getElementById('folderName1'),b=document.getElementById('folderName2');\n    if(a)a.value=names.folder1; if(b)b.value=names.folder2;\n  }\n  function rename(key,input){\n    const old=names[key], next=String(input.value||'').trim();\n    if(!next||next===old){input.value=old;return}\n    if(['Coins','Commemorative','Bullion','Sets','Medals','Tokens / Exonumia','Ancients','Error','Counterfeit','Paper Notes'].includes(next)||next===names[key==='folder1'?'folder2':'folder1']){alert('Please choose a different folder name.');input.value=old;return}\n    const a=items().map(x=>{if(x.category===old)x.category=next;return x});\n    names[key]=next; localStorage.setItem(NAME_KEY,JSON.stringify(names)); localStorage.setItem('lewis-private-collections-v8',JSON.stringify(a));\n    location.reload();\n  }\n  function bind(){\n    apply(); show();\n    const a=document.getElementById('folderName1'),b=document.getElementById('folderName2');\n    if(a&&a.dataset.bound!=='1'){a.dataset.bound='1';a.addEventListener('change',()=>rename('folder1',a))}\n    if(b&&b.dataset.bound!=='1'){b.dataset.bound='1';b.addEventListener('change',()=>rename('folder2',b))}\n  }\n  bind(); setTimeout(bind,100);\n})();\n</script>'''
+          if 'data-category-list-fix="v1"' in s:
+              raise SystemExit('Refusing to patch: category fix already present.')
+          s=s.replace('</body></html>',script+'</body></html>',1)
+          p.write_text(s,encoding='utf-8')
+          print('Category patch prepared.')
+          PY
+      - name: Verify exact changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          expected=['Coins','Commemorative','Bullion','Sets','Medals','Tokens / Exonumia','Ancients','Error','Counterfeit','Paper Notes','Folder 1','Folder 2']
+          if 'data-category-list-fix="v1"' not in s: raise SystemExit('Missing category fix marker')
+          if 'id="folderName1"' not in s or 'id="folderName2"' not in s: raise SystemExit('Missing folder rename controls')
+          if '<option>Other</option>' in s: raise SystemExit('Other is still in the category dropdown')
+          if '<option>Paper Money</option>' in s: raise SystemExit('Paper Money is still in the category dropdown')
+          if '<option>Commemoratives</option>' in s: raise SystemExit('Commemoratives is still in the category dropdown')
+          for x in expected:
+              if x not in s: raise SystemExit(f'Missing category/folder label: {x}')
+          print('Category patch verification passed.')
+          PY
+      - name: Remove temporary workflow and commit the catalog change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/update-category-list.yml
+          git add index.html
+          git commit -m 'Update catalog category list and custom folders'
+          git push
