@@ -1,0 +1,88 @@
+name: Apply final photo delete fix
+on:
+  push:
+    branches: [photo-delete-final-fix]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch photo controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          start='/* PAPER NOTES FORM FIX v1 */<script data-photo-delete-confirmation="v1">'
+          end='</script>\n</body></html>'
+          i=s.find(start)
+          if i < 0:
+              raise SystemExit('Existing photo-delete block not found; stopping safely.')
+          j=s.find(end,i)
+          if j < 0:
+              raise SystemExit('Existing photo-delete block end not found; stopping safely.')
+          new='''/* PAPER NOTES FORM FIX v1 */<script data-photo-delete-confirmation="v2">
+(function(){
+  const ids=['photo1','photo2','photo3'];
+  const cleared=[false,false,false];
+  let modal;
+  function ensureModal(){
+    if(modal)return modal;
+    modal=document.createElement('div');
+    modal.id='photoDeleteModal';
+    modal.style.cssText='display:none;position:fixed;inset:0;background:#0008;z-index:9999;align-items:center;justify-content:center;padding:18px';
+    modal.innerHTML='<div style="background:#fff;border-radius:14px;padding:18px;max-width:360px;width:100%;box-shadow:0 8px 30px #0005"><h3 style="margin:0 0 8px">Delete this photo?</h3><p style="margin:0 0 14px;color:#4b5563;font-size:14px">Are you sure you want to delete this photo?</p><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" id="photoKeep" class="secondary">Keep</button><button type="button" id="photoDeleteConfirm" class="danger">🗑️ Delete</button></div></div>';
+    document.body.appendChild(modal);
+    modal.querySelector('#photoKeep').onclick=()=>modal.style.display='none';
+    modal.querySelector('#photoDeleteConfirm').onclick=()=>{const n=+modal.dataset.photoIndex;cleared[n]=true;const input=document.getElementById(ids[n]);if(input)input.value='';const img=document.getElementById('preview'+(n+1));if(img){img.hidden=true;img.removeAttribute('src')}const btn=document.querySelector('[data-photo-delete="'+n+'"]');if(btn)btn.style.display='none';modal.style.display='none'};
+    return modal;
+  }
+  function addControls(){
+    ids.forEach((id,n)=>{
+      const input=document.getElementById(id); if(!input)return;
+      let row=input.parentElement.querySelector('[data-photo-row="'+n+'"]');
+      if(!row){
+        row=document.createElement('div');row.dataset.photoRow=n;row.style.cssText='display:flex;gap:6px;align-items:center;margin-top:4px';
+        input.parentNode.insertBefore(row,input);row.appendChild(input);input.style.marginTop='0';input.style.flex='1';
+        const b=document.createElement('button');b.type='button';b.className='danger';b.dataset.photoDelete=n;b.title='Delete this photo';b.textContent='🗑️ Delete';b.style.cssText='padding:7px 9px;font-size:11px;white-space:nowrap;display:none';
+        b.onclick=()=>{const m=ensureModal();m.dataset.photoIndex=n;m.style.display='flex'};row.appendChild(b);
+        input.addEventListener('change',()=>{cleared[n]=false;b.style.display=input.files&&input.files.length?'inline-block':'none'});
+      }
+      const b=row.querySelector('[data-photo-delete="'+n+'"]');
+      const preview=document.getElementById('preview'+(n+1));
+      const hasPreview=preview&&!preview.hidden;
+      if(b)b.style.display=(input.files&&input.files.length)||hasPreview?'inline-block':'none';
+    });
+  }
+  function wrapSave(){
+    const btn=document.getElementById('saveBtn');if(!btn||btn.dataset.photoWrapped==='1')return;
+    const original=btn.onclick;if(typeof original!=='function')return;
+    btn.dataset.photoWrapped='1';
+    btn.textContent='Save / Exit';
+    btn.onclick=async function(){
+      if(typeof editing==='number'&&editing>=0&&items[editing]&&Array.isArray(items[editing].photos)){
+        cleared.forEach((yes,n)=>{if(yes)items[editing].photos[n]=null});
+      }
+      await original.call(this);
+      cleared.fill(false);
+    };
+  }
+  function bind(){addControls();wrapSave()}
+  bind();
+  new MutationObserver(()=>bind()).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+</body></html>'''
+          s=s[:i]+new+s[j+len(end):]
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Fix photo delete controls and Save / Exit'
+          git push
