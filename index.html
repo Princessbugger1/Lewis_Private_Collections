@@ -4,8 +4,9 @@
   function apply(b,label){
     if(!b)return;
     const v=+(b.dataset.v||0);
-    b.style.width='100%';
+    b.style.width='max-content';
     b.style.minWidth='0';
+    b.style.justifySelf='start';
     b.classList.remove('yes','no');
     b.textContent=label+' '+(v===1?'✅':v===2?'❌':'❓');
     if(v===1)b.classList.add('yes');
