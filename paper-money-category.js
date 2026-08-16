@@ -129,18 +129,6 @@ function init(){
   updateVisibility();
   updateSaveButton();
   installPhotoControls();
-  const root=document.querySelector('main')||document.body;
-  if(root&&!root.dataset.paperNotesObserver){
-    root.dataset.paperNotesObserver='1';
-    new MutationObserver(()=>{
-      movePaperNotesSection();
-      removePaperNotesSetting();
-      updateVisibility();
-      updateSaveButton();
-      bind();
-      installPhotoControls();
-    }).observe(root,{childList:true,subtree:true});
-  }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
