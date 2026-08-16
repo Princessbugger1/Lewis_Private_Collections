@@ -1,0 +1,34 @@
+name: Apply photo control fix
+on:
+  push:
+    branches: [photo-control-fix]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch photo controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="""  function bind(){addControls();wrapSave()}
+  bind();"""
+          new="""  function bind(){addControls();wrapSave();const sb=document.getElementById('saveBtn');if(sb)sb.textContent='Save Changes / Exit'}
+  bind();
+  new MutationObserver(()=>bind()).observe(document.body,{childList:true,subtree:true});"""
+          if old not in s:
+              raise SystemExit('Target photo-control block not found; stopping safely.')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Fix photo delete control and save exit label'
+          git push
