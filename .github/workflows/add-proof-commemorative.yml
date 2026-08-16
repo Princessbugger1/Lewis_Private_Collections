@@ -1,0 +1,60 @@
+name: Add Proof and Commemorative controls
+on:
+  push:
+    branches: [fix-load-cert-combine]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply guarded patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='PROOF COMMEMORATIVE CONTROLS v1'
+          if marker in s:
+              print('Already patched; stopping safely.')
+              raise SystemExit(0)
+          anchor='<label>Grade / condition<input id="grade" placeholder="MS 63"></label>'
+          controls=(
+              '<label>Proof<button type="button" id="proofState" class="state" style="width:100%" aria-label="Proof status">❓</button></label>'
+              '<label>Commemorative<button type="button" id="commemorativeState" class="state" style="width:100%" aria-label="Commemorative status">❓</button></label>'
+          )
+          if s.count(anchor)!=1:
+              raise SystemExit('Refusing to patch: expected exactly one Grade / condition anchor.')
+          s=s.replace(anchor,anchor+controls,1)
+          reset_anchor="$('coaState').dataset.v=0;$('coaState').textContent='❓';"
+          reset_new=reset_anchor+"$('proofState').dataset.v=0;$('proofState').textContent='❓';$('commemorativeState').dataset.v=0;$('commemorativeState').textContent='❓';"
+          if s.count(reset_anchor)!=1:
+              raise SystemExit('Refusing to patch: reset hook not found exactly once.')
+          s=s.replace(reset_anchor,reset_new,1)
+          save_anchor="checks.forEach(k=>x[k]=editing>=0?state(items[editing],k):0);"
+          save_new=save_anchor+"x.proof=editing>=0?state(items[editing],'proof'):0;x.commemorative=editing>=0?state(items[editing],'commemorative'):0;"
+          if s.count(save_anchor)!=1:
+              raise SystemExit('Refusing to patch: save hook not found exactly once.')
+          s=s.replace(save_anchor,save_new,1)
+          coa_handler="$('coaState').onclick=()=>{let v=(+( $('coaState').dataset.v||0)+1)%3;$('coaState').dataset.v=v;$('coaState').textContent=cycle(v)};"
+          extra=coa_handler+"const bindState=(id,key)=>$(id).onclick=()=>{let v=(+( $(id).dataset.v||0)+1)%3;$(id).dataset.v=v;$(id).textContent=cycle(v)};bindState('proofState','proof');bindState('commemorativeState','commemorative');"
+          if s.count(coa_handler)!=1:
+              raise SystemExit('Refusing to patch: COA handler not found exactly once.')
+          s=s.replace(coa_handler,extra,1)
+          edit_anchor="$('coaState').textContent=cycle(c.status||0);"
+          edit_new=edit_anchor+"$('proofState').dataset.v=state(x,'proof');$('proofState').textContent=cycle(state(x,'proof'));$('commemorativeState').dataset.v=state(x,'commemorative');$('commemorativeState').textContent=cycle(state(x,'commemorative'));"
+          if s.count(edit_anchor)!=1:
+              raise SystemExit('Refusing to patch: edit hook not found exactly once.')
+          s=s.replace(edit_anchor,edit_new,1)
+          s=s.replace('</script></body></html>', '/* PROOF COMMEMORATIVE CONTROLS v1 */</script></body></html>', 1)
+          p.write_text(s,encoding='utf-8')
+          print('Guarded patch applied.')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Add simple Proof and Commemorative three-state controls'
+          git push
