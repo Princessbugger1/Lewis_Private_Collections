@@ -1,4 +1,5 @@
-const CACHE='lewis-private-collections-v25';
+// SYNC CHECK 2026-08-17 — force both devices to fetch the current catalog
+const CACHE='lewis-private-collections-v26';
 
 self.addEventListener('install',event=>event.waitUntil(self.skipWaiting()));
 
