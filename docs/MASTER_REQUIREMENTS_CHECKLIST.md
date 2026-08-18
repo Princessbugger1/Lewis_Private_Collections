@@ -75,6 +75,19 @@ Required default cycle for applicable yes/no fields:
 - [x] Variety checked
 - [ ] Apply the same pattern to all additional applicable yes/no fields
 
+## Draft protection / unfinished entries
+- [x] Automatic local protection for unfinished coin entries
+- [x] Multiple unfinished entries allowed, subject to reasonable temporary-storage limits
+- [x] Unfinished entries remain separate from completed catalog records
+- [x] No permanent Drafts item in the main navigation
+- [x] Add Coin area can expose an Unfinished Entries section when drafts exist
+- [x] Return-to-app prompt offers Continue or Not Now
+- [x] Not Now preserves the draft and does not block other catalog activity
+- [x] Delete Draft action available from the prompt and unfinished-entry list
+- [x] Delete Draft requires explicit confirmation
+- [x] Draft photo/data storage should be managed by storage allowance rather than an arbitrary tiny coin-count limit
+- [ ] Define draft cleanup/retention policy and user-facing storage warnings
+
 ## Architecture
 - [x] Master catalog remains richer than simplified views
 - [x] Additive/extensible fields
