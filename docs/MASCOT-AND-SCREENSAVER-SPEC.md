@@ -28,10 +28,18 @@ Create a friendly, optional personality layer that helps new users learn the cat
 
 ## Screensaver
 - Optional idle screensaver featuring the available mascots.
+- Default idle trigger: 5 minutes, configurable by the user.
 - Screensaver animations must be implemented as a lightweight visual layer and must not continuously query or reload catalog data.
 - Prefer already-loaded thumbnails/visible UI elements rather than full-resolution coin images.
 - Animations should be event-driven and infrequent, with a performance-friendly mode and the ability to disable them.
 - Possible activities include dancing, coin/money-bag tossing, mascot conversations, games, and playful interactions with visible coin thumbnails.
+
+## Screensaver entrance behavior
+- Mascots should enter naturally from a screen edge when the screensaver begins rather than appearing suddenly in the middle of the screen.
+- Flying characters fly in.
+- Walking/running characters walk or run in.
+- Slithering/inchworm characters use their natural movement to enter.
+- Entrance animation should be brief and lightweight.
 
 ## Coin thumbnail interactions
 - A mascot may occasionally approach a visible coin thumbnail and pretend to tug/pull/steal it.
@@ -47,6 +55,7 @@ Create a friendly, optional personality layer that helps new users learn the cat
 - Characters may scatter in different directions based on their position and movement style.
 - Exit animation must be short and must not delay normal catalog interaction.
 - The catalog remains immediately usable as the mascots leave.
+- Entrance and exit behavior should feel like the same natural movement system in opposite directions.
 
 ## Trash/recycle visual gag
 - Optional subtle flies may buzz around the recycle/trash area as a small Easter egg.
