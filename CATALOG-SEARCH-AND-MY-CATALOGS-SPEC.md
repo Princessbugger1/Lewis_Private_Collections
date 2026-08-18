@@ -13,6 +13,10 @@ The catalog has a dedicated collection search, separate from external research.
 - Search should report the number of matching items.
 - Search should work within the current view/custom catalog and provide a way to search the full collection.
 - User-entered values are not restricted to a predefined country, denomination, composition, or other master list. Unknown/custom values must be stored and searchable.
+- Search should use forgiving/fuzzy matching for appropriate text fields so likely misspellings can still find relevant records.
+- Fuzzy matching must never silently alter the user's stored text.
+- Where useful, the interface may offer a “Did you mean …?” suggestion while preserving the original entry.
+- Matching should tolerate capitalization differences, common typos, missing/extra letters, and transposed letters where practical.
 
 ## My Catalogs
 
