@@ -1,0 +1,56 @@
+name: Wire coin photo editor
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Wire the photo editor into the catalog
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          marker = 'coin-photo-integration.js'
+
+          if marker in text:
+              print('Photo editor integration already present.')
+              raise SystemExit(0)
+
+          scripts = (
+              '<script src="js/coin-photo-crop.js?v=1"></script>'
+              '<script src="js/coin-photo-editor.js?v=2"></script>'
+              '<script src="js/coin-photo-integration.js?v=1"></script>'
+          )
+
+          if '</body>' not in text.lower():
+              raise SystemExit('Could not find </body> in index.html')
+
+          pos = text.lower().rfind('</body>')
+          text = text[:pos] + scripts + text[pos:]
+          path.write_text(text, encoding='utf-8')
+          print('Inserted coin photo editor scripts.')
+          PY
+
+      - name: Commit the wiring change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- index.html; then
+            echo "No index.html change needed."
+          else
+            git add index.html
+            git commit -m "Wire crop editor into all coin photos"
+            git push
+          fi
