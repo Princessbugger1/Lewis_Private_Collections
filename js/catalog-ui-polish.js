@@ -1,0 +1,55 @@
+/* Coin Chime — catalog UI polish: safer item deletion + cleaner photo controls. */
+(function(){
+  'use strict';
+  const KEY='lewis-private-collections-v8';
+  let overlay=null;
+
+  function loadItems(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_){return[]}}
+  function saveItems(next){localStorage.setItem(KEY,JSON.stringify(next));try{localStorage.setItem('lewis-private-collections-backup-v1',JSON.stringify(next))}catch(_){}try{if(typeof items!=='undefined'&&Array.isArray(items))items.splice(0,items.length,...next)}catch(_){}}
+  function closeOverlay(){overlay?.remove();overlay=null}
+  function identify(item){const year=String(item?.year||'').trim(),type=String(item?.type||'').trim();return [year,type].filter(Boolean).join(' ')||String(item?.denom||item?.country||'this item').trim()||'this item'}
+
+  function confirmItemDelete(index){
+    const list=loadItems(),item=list[index];if(!item)return;
+    const name=identify(item);
+    closeOverlay();
+    overlay=document.createElement('div');overlay.className='cc-item-confirm';
+    overlay.innerHTML=`<div class="cc-confirm-backdrop"><div class="cc-confirm-card"><div class="cc-confirm-coin">🪙</div><h3>Delete ${escapeHtml(name)}?</h3><p>Are you sure you want to permanently delete <b>${escapeHtml(name)}</b> from your collection?</p><div class="cc-confirm-actions"><button type="button" class="secondary" data-cc-cancel>Keep Item</button><button type="button" class="danger" data-cc-confirm>Yes, Delete ${escapeHtml(name)}</button></div></div></div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('[data-cc-cancel]').onclick=closeOverlay;
+    overlay.querySelector('[data-cc-confirm]').onclick=()=>{const next=loadItems();if(index<0||index>=next.length){closeOverlay();return}next.splice(index,1);saveItems(next);closeOverlay();try{if(typeof reset==='function')reset()}catch(_){}try{if(typeof render==='function')render()}catch(_){}setTimeout(cleanCollectionCards,0)};
+  }
+  function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+  function styleDeleteButtons(){
+    document.querySelectorAll('.cc-delete-photo').forEach(btn=>{btn.style.width='auto';btn.style.display='inline-block';btn.style.padding='6px 10px';btn.style.fontSize='12px';btn.style.marginTop='8px';btn.style.lineHeight='1.2'});
+    document.querySelectorAll('#records .record').forEach(card=>{for(const btn of card.querySelectorAll('button')){if(btn.textContent.trim()==='Delete'){btn.classList.add('cc-item-delete');btn.style.padding='6px 10px';btn.style.fontSize='12px';btn.style.lineHeight='1.2'}}});
+  }
+
+  function cleanCollectionCards(){
+    document.querySelectorAll('#records .record').forEach(card=>{
+      card.querySelectorAll('img:not(.cc-list-thumb)').forEach(img=>img.remove());
+      card.querySelectorAll('.thumb:not(.cc-list-thumb)').forEach(el=>el.remove());
+    });
+    styleDeleteButtons();
+  }
+
+  function addStyles(){if(document.getElementById('cc-ui-polish-style'))return;const s=document.createElement('style');s.id='cc-ui-polish-style';s.textContent=`
+    .cc-confirm-backdrop{position:fixed;inset:0;background:#111b;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px}
+    .cc-confirm-card{background:#fff;border-radius:16px;padding:18px;width:min(400px,100%);box-shadow:0 12px 40px #0007;text-align:center;color:#111827}
+    .cc-confirm-card h3{margin:8px 0 6px;font-size:19px}.cc-confirm-card p{margin:0;color:#6b7280;font-size:14px;line-height:1.4}.cc-confirm-coin{font-size:38px;line-height:1}
+    .cc-confirm-actions{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}.cc-confirm-actions button{max-width:100%}
+    .cc-delete-photo,.cc-item-delete{width:auto!important;display:inline-block!important;padding:6px 10px!important;font-size:12px!important;line-height:1.2!important}
+    #photosSection input[type=file]{max-width:100%;font-size:12px;padding:6px;overflow:hidden}
+    body[data-display-mode="phone"] #photosSection .photos{grid-template-columns:1fr!important}
+    body[data-display-mode="phone"] #photosSection .photoBox{width:100%;min-width:0}
+    body[data-display-mode="phone"] #photosSection input[type=file]{width:100%;font-size:11px;padding:5px}
+    @media(max-width:520px){#photosSection .photos{grid-template-columns:1fr!important}#photosSection input[type=file]{width:100%;font-size:11px;padding:5px}}
+  `;document.head.appendChild(s)}
+
+  function interceptDeletes(){if(document.body.dataset.ccItemDeleteWired)return;document.body.dataset.ccItemDeleteWired='1';document.body.addEventListener('click',e=>{const btn=e.target.closest('#records .record button');if(!btn||btn.textContent.trim()!=='Delete')return;const card=btn.closest('.record'),edit=card?.querySelector('button[data-edit]');if(!edit)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();confirmItemDelete(Number(edit.dataset.edit))},true)}
+
+  function init(){addStyles();interceptDeletes();cleanCollectionCards();styleDeleteButtons()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  const observer=new MutationObserver(()=>{cleanCollectionCards();styleDeleteButtons()});observer.observe(document.documentElement,{childList:true,subtree:true});
+})();
