@@ -1,0 +1,33 @@
+name: Restore full catalog entry page
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore known-good full index and refresh status script
+        run: |
+          git show 53ccf95e14a7612f03a777d52fbdbb226c7eb4ba:index.html > index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('js/edit-status-controls.js?v=2','js/edit-status-controls.js?v=3')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit restored page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- index.html; then
+            git add index.html
+            git commit -m "Restore full catalog page and status v3"
+            git push
+          fi
