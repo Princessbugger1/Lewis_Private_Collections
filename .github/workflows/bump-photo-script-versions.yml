@@ -1,0 +1,36 @@
+name: Refresh photo editor scripts
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump photo script versions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('js/coin-photo-editor.js?v=2','js/coin-photo-editor.js?v=3')
+          s=s.replace('js/coin-photo-integration.js?v=1','js/coin-photo-integration.js?v=2')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- index.html; then
+            echo "No change needed"
+          else
+            git add index.html
+            git commit -m "Refresh photo editor scripts"
+            git push
+          fi
