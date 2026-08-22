@@ -1,0 +1,35 @@
+name: Bump UI polish cache v2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump UI polish script version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('js/catalog-ui-polish.js?v=1','js/catalog-ui-polish.js?v=2')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- index.html; then
+            echo "No change needed"
+          else
+            git add index.html
+            git commit -m "Bump catalog UI polish cache to v2"
+            git push
+          fi
