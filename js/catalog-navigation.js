@@ -1,4 +1,4 @@
-/* Lewis Private Collections — expandable Back/Home + owner section navigation. */
+/* Lewis Private Collections — expandable Back/Home + owner section navigation. Cache refresh enabled. */
 (function(){
 'use strict';
 const stack=[];
