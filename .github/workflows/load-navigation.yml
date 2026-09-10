@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Refresh local JavaScript cache versions
+      - name: Load catalog sections and refresh JavaScript cache versions
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -23,19 +23,22 @@ jobs:
           s = p.read_text(encoding='utf-8')
           version = subprocess.check_output(['git','rev-parse','--short=10','HEAD'], text=True).strip()
 
-          # Every local js/... script gets the current catalog revision as its cache key.
-          # This means browsers keep normal caching, but automatically fetch a fresh
-          # copy whenever the catalog code is updated on main.
+          # Ensure the top-level section router is loaded after the navigation framework.
+          section_tag = '<script src="js/catalog-sections.js"></script>'
+          if 'js/catalog-sections.js' not in s:
+              s = s.replace('</body>', section_tag + '</body>')
+
+          # Give every local JavaScript asset the current catalog revision as its cache key.
           s2 = re.sub(
               r'(<script\s+src=["\']js/[^"\'?]+\.js)(?:\?v=[^"\']*)?(["\'])',
               lambda m: f'{m.group(1)}?v={version}{m.group(2)}',
               s
           )
 
-          if s2 != s:
+          if s2 != p.read_text(encoding='utf-8'):
               p.write_text(s2, encoding='utf-8')
           PY
-      - name: Commit refreshed versions if needed
+      - name: Commit refreshed loader and versions if needed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
