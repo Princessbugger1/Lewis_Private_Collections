@@ -22,6 +22,7 @@
     const service=document.getElementById('certService'),number=document.getElementById('certNumber'),grade=document.getElementById('certGrade'),url=document.getElementById('certUrl');
     if(!coa||!cert||!state||!service||!number||!grade||!url||coa.dataset.ccCombined)return;
     coa.dataset.ccCombined='1';
+    ['CACG','SEGS'].forEach(name=>{if(!Array.from(service.options).some(o=>o.value===name)){const other=Array.from(service.options).find(o=>o.value==='Other');const option=new Option(name,name);service.insertBefore(option,other||null)}});
     const serviceLabel=service.closest('label'),numberLabel=number.closest('label'),gradeLabel=grade.closest('label'),urlLabel=url.closest('label');
     coa.innerHTML='';
     const head=document.createElement('div');head.className='cc-coa-head';head.innerHTML='<b>Certificate of Authenticity</b>';head.appendChild(state);coa.appendChild(head);
@@ -35,7 +36,7 @@
     cert.classList.add('cc-hidden-legacy');
     ['coaIssuer','coaNumber','coaNotes'].forEach(id=>{const el=document.getElementById(id);if(el){const l=el.closest('label');if(l)l.classList.add('cc-hidden-legacy')}});
     function sync(){const v=+(state.dataset.v||0);details.hidden=v!==1;state.classList.toggle('yes',v===1);state.classList.toggle('no',v===2);state.textContent=v===1?'✅':v===2?'❌':'❓';state.title='Certificate of Authenticity: '+(v===1?'Yes':v===2?'No':'Unknown');urlLabel.hidden=service.value!=='Other';verifyBtn.hidden=!service.value;verifyBtn.textContent=service.value?`Verify with ${service.value}`:'Open verification'}
-    function verificationUrl(){const svc=service.value,n=number.value.trim();if(svc==='PCGS')return n?'https://www.pcgs.com/cert/'+encodeURIComponent(n):'https://www.pcgs.com/cert/';if(svc==='NGC')return'https://www.ngccoin.com/';if(svc==='ANACS')return'https://anacs.com/verify/';if(svc==='ICG')return'https://www.icgcoin.com/';if(svc==='Other')return url.value.trim();return''}
+    function verificationUrl(){const svc=service.value,n=number.value.trim();if(svc==='PCGS')return n?'https://www.pcgs.com/cert/'+encodeURIComponent(n):'https://www.pcgs.com/cert/';if(svc==='NGC')return'https://www.ngccoin.com/';if(svc==='ANACS')return'https://anacs.com/verify/';if(svc==='ICG')return'https://www.icgcoin.com/';if(svc==='CACG')return'https://www.cacgrading.com/lookup';if(svc==='SEGS')return'https://www.segsgrading.com/Products/CoinLookup.aspx';if(svc==='Other')return url.value.trim();return''}
     state.addEventListener('click',()=>setTimeout(sync,0));service.addEventListener('change',sync);verifyBtn.addEventListener('click',()=>{const target=verificationUrl();if(!target){if(service.value==='Other')url.focus();return}window.open(target,'_blank','noopener,noreferrer')});
     const formTitle=document.getElementById('formTitle');if(formTitle)new MutationObserver(()=>setTimeout(sync,0)).observe(formTitle,{childList:true,characterData:true,subtree:true});
     const clear=document.getElementById('clearBtn');clear?.addEventListener('click',()=>setTimeout(sync,0));
