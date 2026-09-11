@@ -30,6 +30,7 @@ jobs:
               ('<script src="js/catalog-identification-transfer.js"></script>', 'js/catalog-identification-transfer.js'),
               ('<script src="js/catalog-add-item-scan.js"></script>', 'js/catalog-add-item-scan.js'),
               ('<script src="js/catalog-camera-confirm.js"></script>', 'js/catalog-camera-confirm.js'),
+              ('<script src="js/catalog-scan-photo-remove.js"></script>', 'js/catalog-scan-photo-remove.js'),
           ]
           section_tag = '<script src="js/catalog-sections.js"></script>'
           for tag, asset in tags:
