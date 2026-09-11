@@ -23,11 +23,14 @@ jobs:
           s = p.read_text(encoding='utf-8')
           version = subprocess.check_output(['git','rev-parse','--short=10','HEAD'], text=True).strip()
 
-          # Ensure Research and its approved-transfer handler load before the section router.
-          research_tag = '<script src="js/catalog-research.js"></script>'
-          transfer_tag = '<script src="js/catalog-identification-transfer.js"></script>'
+          # Ensure Research, temporary Google test, and approved-transfer handler load before the section router.
+          tags = [
+              ('<script src="js/catalog-research.js"></script>', 'js/catalog-research.js'),
+              ('<script src="js/catalog-google-test-search.js"></script>', 'js/catalog-google-test-search.js'),
+              ('<script src="js/catalog-identification-transfer.js"></script>', 'js/catalog-identification-transfer.js'),
+          ]
           section_tag = '<script src="js/catalog-sections.js"></script>'
-          for tag, asset in [(research_tag,'js/catalog-research.js'),(transfer_tag,'js/catalog-identification-transfer.js')]:
+          for tag, asset in tags:
               if asset not in s:
                   match = re.search(r'<script\s+src=["\']js/catalog-sections\.js[^"\']*["\']></script>', s)
                   if match:
