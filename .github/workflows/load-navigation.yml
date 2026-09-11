@@ -23,16 +23,17 @@ jobs:
           s = p.read_text(encoding='utf-8')
           version = subprocess.check_output(['git','rev-parse','--short=10','HEAD'], text=True).strip()
 
-          # Ensure the Research center loads before the top-level section router.
+          # Ensure Research and its approved-transfer handler load before the section router.
           research_tag = '<script src="js/catalog-research.js"></script>'
+          transfer_tag = '<script src="js/catalog-identification-transfer.js"></script>'
           section_tag = '<script src="js/catalog-sections.js"></script>'
-          if 'js/catalog-research.js' not in s:
-              if 'js/catalog-sections.js' in s:
-                  s = s.replace(section_tag, research_tag + section_tag)
-                  if research_tag not in s:
-                      s = re.sub(r'(<script\s+src=["\']js/catalog-sections\.js[^"\']*["\']></script>)', research_tag + r'\1', s, count=1)
-              else:
-                  s = s.replace('</body>', research_tag + section_tag + '</body>')
+          for tag, asset in [(research_tag,'js/catalog-research.js'),(transfer_tag,'js/catalog-identification-transfer.js')]:
+              if asset not in s:
+                  match = re.search(r'<script\s+src=["\']js/catalog-sections\.js[^"\']*["\']></script>', s)
+                  if match:
+                      s = s[:match.start()] + tag + s[match.start():]
+                  else:
+                      s = s.replace('</body>', tag + '</body>')
           if 'js/catalog-sections.js' not in s:
               s = s.replace('</body>', section_tag + '</body>')
 
