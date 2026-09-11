@@ -1,0 +1,55 @@
+/* Lewis Private Collections — item drafts + saved research. Separate by purpose, same simple search pattern. */
+(function(){
+'use strict';
+const DRAFT_KEY='lewis-private-collections-drafts-v1';
+const RESEARCH_KEY='lewis-private-collections-saved-research-v1';
+const FORM_IDS=['category','country','type','denom','year','mint','series','grade','variety','quantity','composition','purchase','value','collection','location','notes','coaIssuer','coaNumber','coaNotes','certService','certNumber','certGrade','certUrl','referenceLink','pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer'];
+const PHOTO_IDS=['photo1','photo2','photo3'];
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function read(key){try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+function write(key,v){localStorage.setItem(key,JSON.stringify(v))}
+function titleFrom(c){return [c.year,c.country,c.denomination||c.denom,c.type].filter(Boolean).join(' ')||'Untitled Draft'}
+function fileData(input){return new Promise(resolve=>{const f=input?.files?.[0];if(!f)return resolve('');const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>resolve('');r.readAsDataURL(f)})}
+async function saveItemDraft(){
+ const form={};FORM_IDS.forEach(id=>{if($(id))form[id]=$(id).value});
+ const photos=await Promise.all(PHOTO_IDS.map(id=>fileData($(id))));
+ const candidate={country:form.country||'',type:form.type||'',denomination:form.denom||'',year:form.year||'',mint:form.mint||'',variety:form.variety||'',title:titleFrom(form)};
+ const drafts=read(DRAFT_KEY);drafts.unshift({id:'draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),createdAt:new Date().toISOString(),candidate,referenceLink:form.referenceLink||'',form,photos});write(DRAFT_KEY,drafts);
+ document.dispatchEvent(new CustomEvent('cc-open-section',{detail:{type:'drafts'}}));setTimeout(()=>{document.dispatchEvent(new CustomEvent('cc-drafts-changed'));enhanceDrafts()},0);
+}
+function dataToFile(data,name){if(!data)return null;try{const p=data.split(','),mime=(p[0].match(/:(.*?);/)||[])[1]||'image/jpeg',bin=atob(p[1]),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new File([a],name,{type:mime})}catch(e){return null}}
+function restoreDraft(d){
+ if(!d?.form)return false;FORM_IDS.forEach(id=>{if($(id)&&Object.prototype.hasOwnProperty.call(d.form,id)){ $(id).value=d.form[id]??'';$(id).dispatchEvent(new Event('change',{bubbles:true})) }});
+ (d.photos||[]).forEach((data,i)=>{const input=$(PHOTO_IDS[i]),f=dataToFile(data,'draft-photo-'+(i+1)+'.jpg');if(!input||!f)return;try{const dt=new DataTransfer();dt.items.add(f);input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}});
+ document.dispatchEvent(new CustomEvent('cc-open-section',{detail:{type:'add'}}));setTimeout(()=>$('formTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return true;
+}
+function enhanceDrafts(){
+ const section=$('ccDraftsSection'),list=$('ccDraftList');if(!section||!list)return;
+ let search=$('ccDraftSearch');if(!search){search=document.createElement('input');search.id='ccDraftSearch';search.type='search';search.placeholder='Search country, type, year, mint, series, variety…';search.setAttribute('aria-label','Search drafts');section.querySelector('p.small')?.insertAdjacentElement('afterend',search);search.addEventListener('input',filterDrafts)}
+ filterDrafts();
+}
+function filterDrafts(){const q=String($('ccDraftSearch')?.value||'').trim().toLowerCase();document.querySelectorAll('#ccDraftList .cc-draft-card').forEach(card=>{const d=read(DRAFT_KEY).find(x=>x.id===card.dataset.id);const hay=JSON.stringify(d||{}).toLowerCase();card.hidden=!!q&&!q.split(/\s+/).every(w=>hay.includes(w))})}
+function researchValues(){return {country:$('ccManualCountry')?.value||'',type:$('ccManualType')?.value||'',denomination:$('ccManualDenom')?.value||'',year:$('ccManualYear')?.value||'',mint:$('ccManualMint')?.value||'',variety:$('ccManualVariety')?.value||'',referenceLink:$('ccManualReference')?.value||''}}
+function saveResearch(){const data=researchValues();if(!Object.values(data).some(v=>String(v).trim())){alert('Add at least one research detail before saving.');return}const rows=read(RESEARCH_KEY);rows.unshift({id:'research-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),createdAt:new Date().toISOString(),...data});write(RESEARCH_KEY,rows);renderResearch();}
+function loadResearch(r){const map={ccManualCountry:'country',ccManualType:'type',ccManualDenom:'denomination',ccManualYear:'year',ccManualMint:'mint',ccManualVariety:'variety',ccManualReference:'referenceLink'};Object.entries(map).forEach(([id,k])=>{if($(id))$(id).value=r[k]||''});$('ccSavedResearchDetails').open=false;$('ccManualType')?.scrollIntoView({behavior:'smooth',block:'center'})}
+function renderResearch(){
+ const out=$('ccSavedResearchList');if(!out)return;const rows=read(RESEARCH_KEY),q=String($('ccSavedResearchSearch')?.value||'').trim().toLowerCase(),words=q.split(/\s+/).filter(Boolean);const shown=rows.filter(r=>words.every(w=>JSON.stringify(r).toLowerCase().includes(w)));$('ccSavedResearchCount').textContent=String(rows.length);
+ if(!shown.length){out.innerHTML='<p class="small">'+(rows.length?'No matching saved research.':'No saved research yet.')+'</p>';return}
+ out.innerHTML=shown.map(r=>`<article class="cc-saved-research-card" data-id="${esc(r.id)}"><strong>${esc(titleFrom(r).replace(/Untitled Draft/,'Untitled Research'))}</strong><p class="small">${esc([r.country,r.year,r.denomination,r.mint,r.type,r.variety].filter(Boolean).join(' • '))}</p><div class="actions"><button type="button" class="primary" data-open>Open / Continue Research</button><button type="button" data-add>Use for Add Item</button><button type="button" data-delete>Delete</button></div></article>`).join('');
+ out.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const r=rows.find(x=>x.id===b.closest('[data-id]').dataset.id);if(r)loadResearch(r)});
+ out.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const r=rows.find(x=>x.id===b.closest('[data-id]').dataset.id);if(!r)return;document.dispatchEvent(new CustomEvent('cc-identification-add-requested',{detail:{candidate:{country:r.country,type:r.type,denomination:r.denomination,year:r.year,mint:r.mint,variety:r.variety,title:titleFrom(r)},userApproved:true,referenceLink:r.referenceLink||''}}))});
+ out.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{const id=b.closest('[data-id]').dataset.id;if(confirm('Delete this saved research?')){write(RESEARCH_KEY,rows.filter(x=>x.id!==id));renderResearch()}})
+}
+function enhanceResearch(){
+ const h=[...document.querySelectorAll('#ccResearchSection h3')].find(x=>x.textContent.trim()==='Research It Yourself');const block=h?.closest('.cc-research-block');if(!block)return;
+ const actions=block.querySelector('.actions');if(actions&&!$('ccSaveResearch')){const b=document.createElement('button');b.type='button';b.id='ccSaveResearch';b.className='secondary';b.textContent='Save Research';b.onclick=saveResearch;actions.appendChild(b)}
+ if(!$('ccSavedResearchDetails')){const d=document.createElement('details');d.id='ccSavedResearchDetails';d.className='cc-saved-research';d.innerHTML='<summary><b>Saved Research (<span id="ccSavedResearchCount">0</span>)</b></summary><input id="ccSavedResearchSearch" type="search" placeholder="Search country, type, year, mint, series, variety…" aria-label="Search saved research"><div id="ccSavedResearchList"></div>';block.insertAdjacentElement('beforebegin',d);$('ccSavedResearchSearch').addEventListener('input',renderResearch)}renderResearch();
+}
+function addSaveDraftButton(){const save=$('saveBtn'),clear=$('clearBtn');if(!save||!clear||$('ccSaveItemDraft'))return;const b=document.createElement('button');b.type='button';b.id='ccSaveItemDraft';b.className='secondary';b.textContent='Save as Draft';b.onclick=saveItemDraft;save.insertAdjacentElement('afterend',b)}
+function styles(){if($('ccDraftToolsStyle'))return;const s=document.createElement('style');s.id='ccDraftToolsStyle';s.textContent='#ccDraftSearch,#ccSavedResearchSearch{margin:8px 0 10px}.cc-saved-research{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:0 0 14px}.cc-saved-research summary{cursor:pointer}.cc-saved-research-card{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-top:9px}';document.head.appendChild(s)}
+document.addEventListener('click',e=>{const b=e.target.closest('#ccDraftList [data-continue]');if(!b)return;const id=b.closest('[data-id]')?.dataset.id,d=read(DRAFT_KEY).find(x=>x.id===id);if(d?.form){e.preventDefault();e.stopImmediatePropagation();restoreDraft(d)}},true);
+document.addEventListener('cc-drafts-changed',()=>setTimeout(enhanceDrafts,0));document.addEventListener('cc-research-ready',()=>setTimeout(enhanceResearch,0));
+function init(){styles();addSaveDraftButton();enhanceDrafts();enhanceResearch();const list=$('ccDraftList');if(list)new MutationObserver(enhanceDrafts).observe(list,{childList:true})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0),{once:true});else setTimeout(init,0);
+})();
