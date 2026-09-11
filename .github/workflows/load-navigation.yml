@@ -23,8 +23,16 @@ jobs:
           s = p.read_text(encoding='utf-8')
           version = subprocess.check_output(['git','rev-parse','--short=10','HEAD'], text=True).strip()
 
-          # Ensure the top-level section router is loaded after the navigation framework.
+          # Ensure the Research center loads before the top-level section router.
+          research_tag = '<script src="js/catalog-research.js"></script>'
           section_tag = '<script src="js/catalog-sections.js"></script>'
+          if 'js/catalog-research.js' not in s:
+              if 'js/catalog-sections.js' in s:
+                  s = s.replace(section_tag, research_tag + section_tag)
+                  if research_tag not in s:
+                      s = re.sub(r'(<script\s+src=["\']js/catalog-sections\.js[^"\']*["\']></script>)', research_tag + r'\1', s, count=1)
+              else:
+                  s = s.replace('</body>', research_tag + section_tag + '</body>')
           if 'js/catalog-sections.js' not in s:
               s = s.replace('</body>', section_tag + '</body>')
 
