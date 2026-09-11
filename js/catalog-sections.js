@@ -9,8 +9,10 @@ function findSections(){
   backupSection=document.getElementById('backupSection');
   overviewSection=[...document.querySelectorAll('main > section')].find(s=>s.querySelector('h2')?.textContent.trim()==='Collection overview')||null;
 }
+function closeAcquisition(){document.getElementById('ccOwnerPanel')?.remove()}
 function setMain(type){
   findSections();
+  if(type!=='acquisition')closeAcquisition();
   const all=[addSection,overviewSection,collectionSection,researchSection,backupSection].filter(Boolean);
   all.forEach(s=>s.style.display='none');
   if(type==='collection'){
