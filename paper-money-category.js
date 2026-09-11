@@ -1,7 +1,6 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
-const paperIds=['pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer'];
 const PHOTO_IDS=['photo1','photo2','photo3'];
 function addMobilePhotoLayout(){
   if(document.getElementById('mobilePhotoDeleteLayout'))return;
@@ -30,12 +29,12 @@ function movePaperNotesSection(){
   section.style.padding='10px';
   section.style.background='#f9fafb';
 }
-function hasPaperNotesData(){return paperIds.some(id=>String($(id)?.value||'').trim()!=='');}
 function updateVisibility(){
   const section=$('paperMoneySection'),category=$('category');
   if(!section||!category)return;
   const isPaper=category.value==='Paper Notes';
-  section.classList.toggle('hidden-section',!isPaper&&!hasPaperNotesData());
+  section.classList.toggle('hidden-section',!isPaper);
+  section.hidden=!isPaper;
 }
 function updateSaveButton(){
   const btn=$('saveBtn');
@@ -102,11 +101,7 @@ function applyPendingPhotoDeletes(){
         const exact=candidates.filter(x=>keys.map(k=>String(x[k]??'').trim()).join('\u001f')===d.signature);
         if(exact.length)candidates=exact;
       }
-      if(candidates.length===1){
-        const item=candidates[0];
-        item.photos[d.index]='';
-        changed=true;
-      }
+      if(candidates.length===1){candidates[0].photos[d.index]='';changed=true;}
     });
     if(changed){
       localStorage.setItem('lewis-private-collections-v8',JSON.stringify(items));
@@ -121,7 +116,6 @@ function bind(){
     category.dataset.paperNotesBound='1';
     category.addEventListener('change',()=>{movePaperNotesSection();updateVisibility();});
   }
-  paperIds.forEach(id=>$(id)?.addEventListener('input',updateVisibility));
   PHOTO_IDS.forEach(id=>$(id)?.addEventListener('change',()=>setTimeout(installPhotoControls,0)));
   const save=$('saveBtn');
   if(save&&!save.dataset.photoDeleteSaveBound){
@@ -137,6 +131,7 @@ function init(){
   updateVisibility();
   updateSaveButton();
   installPhotoControls();
+  setTimeout(updateVisibility,0);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
