@@ -28,6 +28,7 @@ jobs:
               ('<script src="js/catalog-research.js"></script>', 'js/catalog-research.js'),
               ('<script src="js/catalog-google-test-search.js"></script>', 'js/catalog-google-test-search.js'),
               ('<script src="js/catalog-identification-transfer.js"></script>', 'js/catalog-identification-transfer.js'),
+              ('<script src="js/catalog-draft-tools.js"></script>', 'js/catalog-draft-tools.js'),
               ('<script src="js/catalog-add-item-scan.js"></script>', 'js/catalog-add-item-scan.js'),
               ('<script src="js/catalog-camera-confirm.js"></script>', 'js/catalog-camera-confirm.js'),
               ('<script src="js/catalog-scan-photo-remove.js"></script>', 'js/catalog-scan-photo-remove.js'),
