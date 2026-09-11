@@ -14,7 +14,7 @@ function setup(){
   // Move the existing, already-tested camera/identification UI instead of duplicating it.
   const choices=document.createElement('div');
   choices.id='ccAddItemChoices';
-  choices.innerHTML='<p class="small">How would you like to add this item?</p><div class="cc-add-choice-row"><button type="button" class="primary" id="ccAddScanChoice">📷 Scan / Identify Coin</button><button type="button" class="secondary" id="ccAddManualChoice">✏️ Enter Manually</button></div>';
+  choices.innerHTML='<p class="small">How would you like to add this item?</p><div class="cc-add-choice-row"><button type="button" class="primary" id="ccAddScanChoice">📷 Scan / Identify Coin</button><button type="button" class="primary" id="ccAddManualChoice">✏️ Enter Manually</button></div>';
   title.after(choices);
 
   const scanWrap=document.createElement('div');
