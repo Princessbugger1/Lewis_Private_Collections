@@ -1,4 +1,4 @@
-/* Camera confirmation overlay for Add an Item scan: live camera -> capture -> Use This Picture / Retake / Cancel. */
+/* Camera confirmation overlay for Add an Item scan: live camera -> capture -> Use This Picture / Retake / Cancel-Close. */
 (function(){
 'use strict';
 let active=false;
@@ -11,7 +11,7 @@ async function openCamera(side){
   let stream=null,blob=null,reviewUrl='';
   const modal=document.createElement('div');
   modal.className='cc-camera-modal cc-camera-confirm-modal';
-  modal.innerHTML=`<div class="cc-camera-card"><h3>${side==='Obverse'?'Obverse / Face':'Reverse'} Picture</h3><div class="cc-camera-frame"><video autoplay playsinline></video><img data-review hidden alt="Picture preview"><canvas hidden></canvas></div><div class="actions" data-live><button type="button" class="primary" data-snap>Take Picture</button><button type="button" class="secondary" data-close>Close</button></div><div class="actions" data-confirm hidden><button type="button" class="primary" data-use>Use This Picture</button><button type="button" class="secondary" data-retake>Retake</button><button type="button" class="secondary" data-cancel>Cancel</button></div><p class="small" data-help>Take the picture, then choose whether to use it or retake it.</p></div>`;
+  modal.innerHTML=`<div class="cc-camera-card"><h3>${side==='Obverse'?'Obverse / Face':'Reverse'} Picture</h3><div class="cc-camera-frame"><video autoplay playsinline></video><img data-review hidden alt="Picture preview"><canvas hidden></canvas></div><div class="actions" data-live><button type="button" class="primary" data-snap>Take Picture</button><button type="button" class="secondary" data-close>Cancel / Close</button></div><div class="actions" data-confirm hidden><button type="button" class="primary" data-use>Use This Picture</button><button type="button" class="secondary" data-retake>Retake</button><button type="button" class="secondary" data-cancel>Cancel / Close</button></div><p class="small" data-help>Take the picture, then use it, retake it, or cancel and close.</p></div>`;
   document.body.appendChild(modal);
   const video=modal.querySelector('video'),review=modal.querySelector('[data-review]'),canvas=modal.querySelector('canvas');
   const live=modal.querySelector('[data-live]'),confirm=modal.querySelector('[data-confirm]');
@@ -40,6 +40,7 @@ const style=document.createElement('style');style.textContent=`
 .cc-camera-confirm-modal video[hidden],.cc-camera-confirm-modal [data-review][hidden]{display:none!important}
 .cc-camera-confirm-modal .actions{position:sticky!important;bottom:0!important;background:#fff!important;padding:10px 0 4px!important;margin-top:8px!important;z-index:2!important;display:flex!important;gap:8px!important;flex-wrap:wrap!important}
 .cc-camera-confirm-modal .actions button{min-width:120px!important;flex:1 1 120px!important}
+.cc-camera-confirm-modal [data-snap],.cc-camera-confirm-modal [data-use]{order:1}.cc-camera-confirm-modal [data-retake]{order:2}.cc-camera-confirm-modal [data-close],.cc-camera-confirm-modal [data-cancel]{order:3}
 @media(max-width:480px){.cc-camera-confirm-modal .cc-camera-frame{height:48dvh!important}.cc-camera-confirm-modal .cc-camera-card{padding:10px!important}.cc-camera-confirm-modal .actions button{min-width:0!important;font-size:14px!important;padding:10px 7px!important}}
 `;document.head.appendChild(style);
 })();
