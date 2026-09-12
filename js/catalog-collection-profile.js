@@ -26,7 +26,8 @@
     prefix.addEventListener('input',()=>{const pos=prefix.selectionStart;prefix.value=cleanPrefix(prefix.value);try{prefix.setSelectionRange(pos,pos)}catch(_){}});
     section.querySelector('#ccSaveCollectionProfile').addEventListener('click',()=>{const next=save({name:name.value,prefix:prefix.value});name.value=next.name;prefix.value=next.prefix;status.textContent='Collection Profile saved.'});
   }
-  function init(){build();document.getElementById('settingsToggle')?.addEventListener('click',()=>setTimeout(build,0))}
+  function loadCatalogIds(){if(document.querySelector('script[data-cc-catalog-ids]'))return;const s=document.createElement('script');s.src='js/catalog-item-ids.js?v=ee87de14ba';s.dataset.ccCatalogIds='1';document.body.appendChild(s)}
+  function init(){build();loadCatalogIds();document.getElementById('settingsToggle')?.addEventListener('click',()=>setTimeout(build,0))}
   window.LewisCollectionProfile={load,save};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
