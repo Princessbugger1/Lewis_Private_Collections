@@ -7,9 +7,10 @@ function sync(){
   const draft=document.getElementById('ccSaveItemDraft');
   if(!title||!save)return;
   const isDraft=/update\s+draft/i.test(draft?.textContent||'') || /^draft\b/i.test(title.textContent||'');
-  const isEdit=!isDraft&&(/save\s+changes/i.test(save.textContent||'') || /^edit\b/i.test(title.textContent||''));
+  const isEdit=!isDraft&&(/save\s+changes|update\s+item/i.test(save.textContent||'') || /^edit\b/i.test(title.textContent||''));
   const wanted=isDraft?'Draft':(isEdit?'Edit Item':'Add an Item');
   if(title.textContent!==wanted)title.textContent=wanted;
+  if(isEdit&&save.textContent!=='Update Item')save.textContent='Update Item';
   const choices=document.getElementById('ccAddItemChoices');
   const scan=document.getElementById('ccAddScanArea');
   if(choices)choices.hidden=isEdit||isDraft;
