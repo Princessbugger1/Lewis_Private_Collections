@@ -116,6 +116,7 @@ function bind(){
     category.dataset.paperNotesBound='1';
     category.addEventListener('change',()=>{movePaperNotesSection();updateVisibility();});
   }
+  document.addEventListener('cc-fresh-item',()=>setTimeout(updateVisibility,0));
   PHOTO_IDS.forEach(id=>$(id)?.addEventListener('change',()=>setTimeout(installPhotoControls,0)));
   const save=$('saveBtn');
   if(save&&!save.dataset.photoDeleteSaveBound){
