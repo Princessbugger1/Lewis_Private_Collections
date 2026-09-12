@@ -2,43 +2,21 @@
 (function(){
 'use strict';
 const DRAFT_KEY='lewis-private-collections-drafts-v1';
+const ITEM_KEY='lewis-private-collections-v8';
 const RESEARCH_KEY='lewis-private-collections-saved-research-v1';
 const FORM_IDS=['category','country','type','denom','year','mint','series','grade','variety','quantity','composition','purchase','value','collection','location','notes','coaIssuer','coaNumber','coaNotes','certService','certNumber','certGrade','certUrl','referenceLink','pSeries','pSerial','pStar','pSignatures','pPrinting','pErrors','pIssuer','mintage','weight','expectedWeight'];
 const PHOTO_IDS=['photo1','photo2','photo3'];
-const $=id=>document.getElementById(id);
+const $=id=>document.getElementById(id);let activeDraftId=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 function read(key){try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
 function write(key,v){localStorage.setItem(key,JSON.stringify(v))}
 function titleFrom(c){return [c.year,c.country,c.denomination||c.denom,c.type].filter(Boolean).join(' ')||'Untitled Draft'}
 function fileData(input){return new Promise(resolve=>{const f=input?.files?.[0];if(!f)return resolve('');const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>resolve('');r.readAsDataURL(f)})}
-function resetAddForm(){
- try{if(typeof reset==='function'){reset();return}}catch(e){}
- FORM_IDS.forEach(id=>{const n=$(id);if(!n)return;if(id==='category')n.value='Coins';else if(id==='quantity')n.value='1';else n.value=''});
- PHOTO_IDS.forEach(id=>{const n=$(id);if(n)n.value=''});
- ['preview1','preview2','preview3'].forEach(id=>{const n=$(id);if(n){n.hidden=true;n.removeAttribute('src')}});
-}
-async function saveItemDraft(){
- const button=$('ccSaveItemDraft');if(button?.disabled)return;
- if(button){button.disabled=true;button.textContent='Saving…'}
- try{
-  const form={};FORM_IDS.forEach(id=>{if($(id))form[id]=$(id).value});
-  const photos=await Promise.all(PHOTO_IDS.map(id=>fileData($(id))));
-  const candidate={country:form.country||'',type:form.type||'',denomination:form.denom||'',year:form.year||'',mint:form.mint||'',variety:form.variety||'',title:titleFrom(form)};
-  const hasInfo=Object.entries(form).some(([k,v])=>k!=='category'&&k!=='quantity'&&String(v||'').trim())||photos.some(Boolean);
-  if(!hasInfo){alert('Enter some item information before saving a draft.');return}
-  const drafts=read(DRAFT_KEY);drafts.unshift({id:'draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),createdAt:new Date().toISOString(),candidate,referenceLink:form.referenceLink||'',form,photos});
-  write(DRAFT_KEY,drafts);
-  document.dispatchEvent(new CustomEvent('cc-drafts-changed'));
-  resetAddForm();
-  document.dispatchEvent(new CustomEvent('cc-open-section',{detail:{type:'add'}}));
-  setTimeout(()=>{enhanceDrafts();$('formTitle')?.scrollIntoView({behavior:'smooth',block:'start'})},0);
- }catch(e){
-  console.error('Draft save failed',e);
-  alert(e?.name==='QuotaExceededError'?'This draft could not be saved because this browser’s local storage is full. Nothing was cleared.':'This draft could not be saved. Nothing was cleared.');
- }finally{if(button){button.disabled=false;button.textContent='Save as Draft'}}
-}
+function resetAddForm(){try{if(typeof reset==='function'){reset();return}}catch(e){}FORM_IDS.forEach(id=>{const n=$(id);if(!n)return;if(id==='category')n.value='Coins';else if(id==='quantity')n.value='1';else n.value=''});PHOTO_IDS.forEach(id=>{const n=$(id);if(n)n.value=''});['preview1','preview2','preview3'].forEach(id=>{const n=$(id);if(n){n.hidden=true;n.removeAttribute('src')}})}
+async function saveItemDraft(){const button=$('ccSaveItemDraft');if(button?.disabled)return;if(button){button.disabled=true;button.textContent='Saving…'}try{const form={};FORM_IDS.forEach(id=>{if($(id))form[id]=$(id).value});const photos=await Promise.all(PHOTO_IDS.map(id=>fileData($(id))));const candidate={country:form.country||'',type:form.type||'',denomination:form.denom||'',year:form.year||'',mint:form.mint||'',variety:form.variety||'',title:titleFrom(form)};const hasInfo=Object.entries(form).some(([k,v])=>k!=='category'&&k!=='quantity'&&String(v||'').trim())||photos.some(Boolean);if(!hasInfo){alert('Enter some item information before saving a draft.');return}const drafts=read(DRAFT_KEY);drafts.unshift({id:'draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),createdAt:new Date().toISOString(),candidate,referenceLink:form.referenceLink||'',form,photos});write(DRAFT_KEY,drafts);activeDraftId=null;document.dispatchEvent(new CustomEvent('cc-drafts-changed'));resetAddForm();document.dispatchEvent(new CustomEvent('cc-open-section',{detail:{type:'add'}}));setTimeout(()=>{enhanceDrafts();$('formTitle')?.scrollIntoView({behavior:'smooth',block:'start'})},0)}catch(e){console.error('Draft save failed',e);alert(e?.name==='QuotaExceededError'?'This draft could not be saved because this browser’s local storage is full. Nothing was cleared.':'This draft could not be saved. Nothing was cleared.')}finally{if(button){button.disabled=false;button.textContent='Save as Draft'}}}
 function dataToFile(data,name){if(!data)return null;try{const p=data.split(','),mime=(p[0].match(/:(.*?);/)||[])[1]||'image/jpeg',bin=atob(p[1]),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new File([a],name,{type:mime})}catch(e){return null}}
-function restoreDraft(d){if(!d?.form)return false;FORM_IDS.forEach(id=>{if($(id)&&Object.prototype.hasOwnProperty.call(d.form,id)){$(id).value=d.form[id]??'';$(id).dispatchEvent(new Event('change',{bubbles:true}))}});(d.photos||[]).forEach((data,i)=>{const input=$(PHOTO_IDS[i]),f=dataToFile(data,'draft-photo-'+(i+1)+'.jpg');if(!input||!f)return;try{const dt=new DataTransfer();dt.items.add(f);input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}});document.dispatchEvent(new CustomEvent('cc-open-section',{detail:{type:'add'}}));setTimeout(()=>$('formTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return true}
+function restoreDraft(d){if(!d?.form)return false;activeDraftId=d.id;FORM_IDS.forEach(id=>{if($(id)&&Object.prototype.hasOwnProperty.call(d.form,id)){$(id).value=d.form[id]??'';$(id).dispatchEvent(new Event('change',{bubbles:true}))}});(d.photos||[]).forEach((data,i)=>{const input=$(PHOTO_IDS[i]),f=dataToFile(data,'draft-photo-'+(i+1)+'.jpg');if(!input||!f)return;try{const dt=new DataTransfer();dt.items.add(f);input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}});document.dispatchEvent(new CustomEvent('cc-open-section',{detail:{type:'add'}}));setTimeout(()=>$('formTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),0);return true}
+function watchCompletedDraft(){const btn=$('saveBtn');if(!btn||btn.dataset.ccDraftCompletion)return;btn.dataset.ccDraftCompletion='1';btn.addEventListener('click',()=>{if(!activeDraftId)return;const id=activeDraftId,before=localStorage.getItem(ITEM_KEY)||'[]';setTimeout(()=>{const after=localStorage.getItem(ITEM_KEY)||'[]';if(after===before)return;const drafts=read(DRAFT_KEY);if(!drafts.some(d=>d.id===id)){activeDraftId=null;return}write(DRAFT_KEY,drafts.filter(d=>d.id!==id));activeDraftId=null;document.dispatchEvent(new CustomEvent('cc-drafts-changed'))},1100)},true)}
 function enhanceDrafts(){const section=$('ccDraftsSection'),list=$('ccDraftList');if(!section||!list)return;let search=$('ccDraftSearch');if(!search){search=document.createElement('input');search.id='ccDraftSearch';search.type='search';search.placeholder='Search country, type, year, mint, series, variety…';search.setAttribute('aria-label','Search drafts');section.querySelector('p.small')?.insertAdjacentElement('afterend',search);search.addEventListener('input',filterDrafts)}filterDrafts()}
 function filterDrafts(){const q=String($('ccDraftSearch')?.value||'').trim().toLowerCase();document.querySelectorAll('#ccDraftList .cc-draft-card').forEach(card=>{const d=read(DRAFT_KEY).find(x=>x.id===card.dataset.id);const hay=JSON.stringify(d||{}).toLowerCase();card.hidden=!!q&&!q.split(/\s+/).every(w=>hay.includes(w))})}
 function researchValues(){return {country:$('ccManualCountry')?.value||'',type:$('ccManualType')?.value||'',denomination:$('ccManualDenom')?.value||'',year:$('ccManualYear')?.value||'',mint:$('ccManualMint')?.value||'',variety:$('ccManualVariety')?.value||'',referenceLink:$('ccManualReference')?.value||''}}
@@ -50,6 +28,6 @@ function addSaveDraftButton(){const save=$('saveBtn'),clear=$('clearBtn');if(!sa
 function styles(){if($('ccDraftToolsStyle'))return;const s=document.createElement('style');s.id='ccDraftToolsStyle';s.textContent='#ccDraftSearch,#ccSavedResearchSearch{margin:8px 0 10px}.cc-saved-research{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:0 0 14px}.cc-saved-research summary{cursor:pointer}.cc-saved-research-card{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-top:9px}';document.head.appendChild(s)}
 document.addEventListener('click',e=>{const b=e.target.closest('#ccDraftList [data-continue]');if(!b)return;const id=b.closest('[data-id]')?.dataset.id,d=read(DRAFT_KEY).find(x=>x.id===id);if(d?.form){e.preventDefault();e.stopImmediatePropagation();restoreDraft(d)}},true);
 document.addEventListener('cc-drafts-changed',()=>setTimeout(enhanceDrafts,0));document.addEventListener('cc-research-ready',()=>setTimeout(enhanceResearch,0));
-function init(){styles();addSaveDraftButton();enhanceDrafts();enhanceResearch();const list=$('ccDraftList');if(list)new MutationObserver(enhanceDrafts).observe(list,{childList:true})}
+function init(){styles();addSaveDraftButton();watchCompletedDraft();enhanceDrafts();enhanceResearch();const list=$('ccDraftList');if(list)new MutationObserver(enhanceDrafts).observe(list,{childList:true})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0),{once:true});else setTimeout(init,0);
 })();
