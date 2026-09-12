@@ -15,7 +15,17 @@ function ensure(){
 }
 function nextSeq(){const rows=load();return rows.reduce((m,x)=>Math.max(m,Number(x?.catalogSeq)||0),0)+1}
 function get(item){return Number(item?.catalogSeq)>0?format(item.catalogSeq):''}
+function hasOwnerData(x){return ['acquiredDate','acquiredFrom','purchase','value','location'].some(k=>String(x?.[k]??'').trim())}
+function ownerMatches(x,q){q=String(q||'').trim().toLowerCase();if(!q)return true;const id=get(x).toLowerCase(),digits=String(Number(x?.catalogSeq)||'');return id.includes(q)||digits===String(Number(q)||'')||Object.values(x||{}).some(v=>typeof v!=='object'&&String(v??'').toLowerCase().includes(q))}
+function showOwnerIds(){
+ const panel=document.getElementById('ccOwnerPanel');if(!panel)return;
+ const q=document.getElementById('ccOwnerSearch')?.value||'';
+ const rows=load().filter(hasOwnerData).filter(x=>ownerMatches(x,q));
+ const cards=[...panel.querySelectorAll('.cc-owner-content .record')];
+ cards.forEach((card,i)=>{const x=rows[i];if(!x)return;let tag=card.querySelector('.cc-owner-catalog-id');if(!tag){tag=document.createElement('div');tag.className='cc-owner-catalog-id';tag.style.cssText='font-size:12px;color:#6b7280;margin:2px 0 5px';card.querySelector('.record-title')?.insertAdjacentElement('afterend',tag)}tag.textContent='Catalog ID: '+get(x)})
+}
+function watchOwner(){let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;showOwnerIds()})}).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('input',e=>{if(e.target?.id==='ccOwnerSearch')setTimeout(showOwnerIds,0)})}
 window.LewisCatalogIds={ensure,nextSeq,get,format};
-function init(){ensure();document.addEventListener('cc-open-section',e=>{if(e.detail?.type==='collection')setTimeout(ensure,0)});window.addEventListener('cc-collection-profile-changed',()=>window.dispatchEvent(new CustomEvent('cc-catalog-id-display-changed')))}
+function init(){ensure();watchOwner();setTimeout(showOwnerIds,0);document.addEventListener('cc-open-section',e=>{if(e.detail?.type==='collection')setTimeout(ensure,0)});window.addEventListener('cc-collection-profile-changed',()=>{window.dispatchEvent(new CustomEvent('cc-catalog-id-display-changed'));setTimeout(showOwnerIds,0)})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
