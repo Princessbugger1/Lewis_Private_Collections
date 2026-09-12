@@ -23,7 +23,7 @@ jobs:
           s = p.read_text(encoding='utf-8')
           version = subprocess.check_output(['git','rev-parse','--short=10','HEAD'], text=True).strip()
 
-          # Ensure Research helpers and Add Item identification load before the section router.
+          # Ensure modular catalog helpers load before the section router.
           tags = [
               ('<script src="js/catalog-research.js"></script>', 'js/catalog-research.js'),
               ('<script src="js/catalog-google-test-search.js"></script>', 'js/catalog-google-test-search.js'),
@@ -34,6 +34,7 @@ jobs:
               ('<script src="js/catalog-camera-confirm.js"></script>', 'js/catalog-camera-confirm.js'),
               ('<script src="js/catalog-scan-photo-remove.js"></script>', 'js/catalog-scan-photo-remove.js'),
               ('<script src="js/catalog-edit-title.js"></script>', 'js/catalog-edit-title.js'),
+              ('<script src="js/catalog-save-reliability.js"></script>', 'js/catalog-save-reliability.js'),
           ]
           section_tag = '<script src="js/catalog-sections.js"></script>'
           for tag, asset in tags:
