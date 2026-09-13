@@ -28,7 +28,7 @@
   }
   function loadScript(src,attr){if(document.querySelector('script['+attr+']'))return;const s=document.createElement('script');s.src=src;s.setAttribute(attr,'1');document.body.appendChild(s)}
   function loadCatalogIds(){loadScript('js/catalog-item-ids.js?v=ee87de14ba','data-cc-catalog-ids')}
-  function loadAcquisitionLinks(){loadScript('js/catalog-acquisition-item-links.js?v=1513640064','data-cc-acquisition-links')}
+  function loadAcquisitionLinks(){loadScript('js/catalog-acquisition-item-links.js?v=67cbbd9763','data-cc-acquisition-links')}
   function init(){build();loadCatalogIds();loadAcquisitionLinks();document.getElementById('settingsToggle')?.addEventListener('click',()=>setTimeout(build,0))}
   window.LewisCollectionProfile={load,save};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
