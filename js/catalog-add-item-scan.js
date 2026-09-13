@@ -25,7 +25,9 @@ function setup(){
   if(!addSection||!identifyBlock)return;
   const choices=document.createElement('div');choices.id='ccAddItemChoices';choices.innerHTML='<p class="small">How would you like to add this item?</p><div class="cc-add-choice-row"><button type="button" class="primary" id="ccAddScanChoice">📷 Scan / Identify Coin</button><button type="button" class="primary" id="ccAddManualChoice">✏️ Enter Manually</button></div>';title.after(choices);
   const scanWrap=document.createElement('div');scanWrap.id='ccAddScanArea';scanWrap.hidden=true;scanWrap.appendChild(identifyBlock);choices.after(scanWrap);
-  identifyHeading.textContent='Scan / Identify Coin';const intro=identifyBlock.querySelector('p.small');if(intro)intro.textContent="Take or choose a picture of each side. We'll use these photos to look for possible matches before anything is added.";
+  identifyHeading.textContent='Scan / Identify Coin';
+  const intro=identifyBlock.querySelector('p.small');if(intro)intro.textContent='Take or choose a picture of each side. With the free Numista plan, the photos stay with your item but Numista does not search the photos yet, so enter at least one clue below to search.';
+  const clueSummary=identifyBlock.querySelector('.cc-id-clues summary');if(clueSummary)clueSummary.textContent='Add at least one clue (required for Numista free search)';
   const researchIntro=research.querySelector('.cc-research-intro');if(researchIntro)researchIntro.textContent='Research a coin yourself, check grading and value resources, and save information you trust.';
   document.getElementById('ccAddScanChoice').onclick=()=>{scanWrap.hidden=false;scanWrap.scrollIntoView({behavior:'smooth',block:'nearest'})};
   document.getElementById('ccAddManualChoice').onclick=()=>{scanWrap.hidden=true;const first=addSection.querySelector('.grid input,.grid select');first?.focus({preventScroll:true});first?.scrollIntoView({behavior:'smooth',block:'center'})};
@@ -35,9 +37,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 document.addEventListener('cc-research-ready',setup);
 })();
 (function loadNumistaProvider(){
-  if(document.querySelector('script[data-cc-numista-provider]'))return;
-  const s=document.createElement('script');
-  s.src='js/catalog-numista-provider.js?v=20260913-1';
-  s.dataset.ccNumistaProvider='1';
-  document.head.appendChild(s);
+  if(!document.querySelector('script[data-cc-numista-provider]')){
+    const s=document.createElement('script');
+    s.src='js/catalog-numista-provider.js?v=20260913-2';
+    s.dataset.ccNumistaProvider='1';
+    document.head.appendChild(s);
+  }
+  if(!document.querySelector('script[data-cc-simple-identification]')){
+    const s=document.createElement('script');
+    s.src='js/catalog-identification-simple-flow.js?v=20260913-2';
+    s.dataset.ccSimpleIdentification='1';
+    document.head.appendChild(s);
+  }
 })();
