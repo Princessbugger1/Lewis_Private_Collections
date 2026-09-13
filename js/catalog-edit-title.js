@@ -29,7 +29,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function loadSafeRestore(){
   if(document.querySelector('script[data-cc-safe-restore]'))return;
   const s=document.createElement('script');
-  s.src='js/catalog-safe-restore.js?v=20260913-2';
+  s.src='js/catalog-safe-restore.js?v=20260913-3';
   s.dataset.ccSafeRestore='1';
   document.head.appendChild(s);
 })();
