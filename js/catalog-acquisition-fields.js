@@ -75,7 +75,9 @@ function arrangeCertification(){
   certSection.hidden=true;
 
   const updateCertificationVisibility=()=>{
-    details.hidden=String(coaState.dataset.v||'0')!=='1';
+    const isYes=String(coaState.dataset.v||'0')==='1';
+    details.hidden=!isYes;
+    details.style.display=isYes?'grid':'none';
   };
   updateCertificationVisibility();
   coaState.addEventListener('click',()=>setTimeout(updateCertificationVisibility,0));
