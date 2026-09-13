@@ -15,16 +15,15 @@ function makeLabel(id,title,type='text'){
 
 function build(){
   if($('ccAcquisitionSection'))return;
-  const purchase=$('purchase'),value=$('value'),location=$('location');
-  if(!purchase||!value||!location)return;
+  const purchase=$('purchase'),value=$('value'),location=$('location'),notes=$('notes');
+  if(!purchase||!value||!location||!notes)return;
   const purchaseLabel=purchase.closest('label');
   const valueLabel=value.closest('label');
   const locationLabel=location.closest('label');
-  if(!purchaseLabel||!valueLabel||!locationLabel)return;
+  const notesLabel=notes.closest('label');
+  if(!purchaseLabel||!valueLabel||!locationLabel||!notesLabel)return;
 
-  /* Capture the original form position BEFORE moving any existing fields. */
-  const parent=locationLabel.parentNode;
-  const anchor=locationLabel.nextSibling;
+  const parent=notesLabel.parentNode;
 
   const section=document.createElement('div');
   section.id='ccAcquisitionSection';
@@ -44,11 +43,13 @@ function build(){
     locationLabel
   );
   section.append(title,grid);
-  parent.insertBefore(section,anchor);
+
+  /* Keep ownership/value information near the end of the form, directly above Notes. */
+  parent.insertBefore(section,notesLabel);
 
   const style=document.createElement('style');
   style.id='ccAcquisitionStyle';
-  style.textContent='.cc-acquisition-section{grid-column:1/-1;border:1px solid #d1d5db;border-radius:12px;padding:12px;margin:4px 0 8px;background:rgba(255,255,255,.02)}.cc-acquisition-title{font-weight:700;font-size:13px;margin-bottom:10px}.cc-acquisition-grid{margin:0}.cc-acquisition-grid label{min-width:0;margin:0}';
+  style.textContent='.cc-acquisition-section{grid-column:1/-1;border:1px solid #d1d5db;border-radius:12px;padding:12px;margin:6px 0 2px;background:rgba(255,255,255,.02)}.cc-acquisition-title{font-weight:700;font-size:13px;margin-bottom:10px}.cc-acquisition-grid{margin:0}.cc-acquisition-grid label{min-width:0;margin:0}';
   document.head.appendChild(style);
 
   /* Use the catalog's original save/reset/edit path for these fields. */
