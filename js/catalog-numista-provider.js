@@ -5,9 +5,11 @@ const ENDPOINT='https://swwzpewstthoajkhhipp.supabase.co/functions/v1/numista-pr
 let busy=false;
 function status(html){const out=document.getElementById('ccResearchIdentifyStatus');if(!out)return;out.hidden=false;out.innerHTML=html}
 function clueQuery(clues){return [clues?.country,clues?.year,clues?.denomination,clues?.mint,clues?.letters].map(v=>String(v||'').trim()).filter(Boolean).join(' ')}
+function cleanClues(clues){return {country:String(clues?.country||'').trim(),year:String(clues?.year||'').trim(),denomination:String(clues?.denomination||'').trim(),mint:String(clues?.mint||'').trim()}}
 async function search(detail){
   if(busy)return;
-  const q=clueQuery(detail?.clues||{});
+  const clues=detail?.clues||{};
+  const q=clueQuery(clues);
   if(!q){
     status('<h4>Numista is connected</h4><p>Because the free Numista plan does not include photo search, add at least one clue such as country, year, denomination, mint mark, or visible words, then tap Find possible matches again.</p>');
     return;
@@ -18,7 +20,8 @@ async function search(detail){
     const res=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'search',q,category:'coin',count:10})});
     const data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||('Numista request failed ('+res.status+')'));
-    const candidates=Array.isArray(data.candidates)?data.candidates:[];
+    const searchClues=cleanClues(clues);
+    const candidates=(Array.isArray(data.candidates)?data.candidates:[]).map(c=>({...c,searchClues}));
     if(!candidates.length){
       status('<h4>No matches found</h4><p>Try fewer or different clues. The Numista connection is working, but this search returned no results.</p>');
       return;
