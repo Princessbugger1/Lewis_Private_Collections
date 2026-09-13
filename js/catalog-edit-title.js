@@ -26,3 +26,10 @@ function setup(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(setup,0));else setTimeout(setup,0);
 })();
+(function loadSafeRestore(){
+  if(document.querySelector('script[data-cc-safe-restore]'))return;
+  const s=document.createElement('script');
+  s.src='js/catalog-safe-restore.js?v=20260913-1';
+  s.dataset.ccSafeRestore='1';
+  document.head.appendChild(s);
+})();
