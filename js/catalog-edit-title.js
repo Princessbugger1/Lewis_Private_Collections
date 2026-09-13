@@ -36,7 +36,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function loadTrash(){
   if(document.querySelector('script[data-cc-trash]'))return;
   const s=document.createElement('script');
-  s.src='js/catalog-trash.js?v=20260913-1';
+  s.src='js/catalog-trash.js?v=20260913-2';
   s.dataset.ccTrash='1';
   document.head.appendChild(s);
 })();
