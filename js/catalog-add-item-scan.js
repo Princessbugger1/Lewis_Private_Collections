@@ -34,3 +34,10 @@ function setup(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(setup,0));else setTimeout(setup,0);
 document.addEventListener('cc-research-ready',setup);
 })();
+(function loadNumistaProvider(){
+  if(document.querySelector('script[data-cc-numista-provider]'))return;
+  const s=document.createElement('script');
+  s.src='js/catalog-numista-provider.js?v=20260913-1';
+  s.dataset.ccNumistaProvider='1';
+  document.head.appendChild(s);
+})();
