@@ -40,3 +40,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   s.dataset.ccTrash='1';
   document.head.appendChild(s);
 })();
+(function loadComprehensiveBackup(){
+  if(document.querySelector('script[data-cc-comprehensive-backup]'))return;
+  const s=document.createElement('script');
+  s.src='js/catalog-comprehensive-backup.js?v=20260913-1';
+  s.dataset.ccComprehensiveBackup='1';
+  document.head.appendChild(s);
+})();
