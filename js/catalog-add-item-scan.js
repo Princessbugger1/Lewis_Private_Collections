@@ -39,13 +39,13 @@ document.addEventListener('cc-research-ready',setup);
 (function loadNumistaProvider(){
   if(!document.querySelector('script[data-cc-numista-provider]')){
     const s=document.createElement('script');
-    s.src='js/catalog-numista-provider.js?v=20260913-2';
+    s.src='js/catalog-numista-provider.js?v=20260913-3';
     s.dataset.ccNumistaProvider='1';
     document.head.appendChild(s);
   }
   if(!document.querySelector('script[data-cc-simple-identification]')){
     const s=document.createElement('script');
-    s.src='js/catalog-identification-simple-flow.js?v=20260913-2';
+    s.src='js/catalog-identification-simple-flow.js?v=20260913-3';
     s.dataset.ccSimpleIdentification='1';
     document.head.appendChild(s);
   }
